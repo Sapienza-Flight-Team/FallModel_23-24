@@ -1,0 +1,11 @@
+#pragma once
+
+#include "../inc/pch.h"
+
+
+class Settings {
+private:
+public:
+    void load();
+    void save();
+};

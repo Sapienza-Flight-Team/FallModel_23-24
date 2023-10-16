@@ -1,0 +1,55 @@
+USING THE MAKEFILE:
+    The Makefile in this directory provides four different options for compiling and running your project.
+    Make sure you are in the main project directory where the Makefile is located before executing the following commands.
+
+CONFIGURATION:
+    The Makefile is configurable to adapt to your specific requirements.
+    You can modify it to add static libraries, change compilation options, or make other customizations.
+    To make changes to the Makefile configuration, open the Makefile in the project's main directory and modify the variables and options according to your preferences. Make sure you are familiar with the Makefile format and compilation rules before making significant modifications.
+
+RELEASE:
+    To compile and run the application in release mode.
+
+    >	make RELS
+
+    This will generate an optimized executable ready for use.
+
+PROFILING:
+    To get a good executable to profile the program.
+
+    >	make PROF
+
+    This will generate an executable with profiling information.
+
+DEBUGGING:
+    To compile and run the application in debug mode.
+
+    >	make DEBG
+
+    This will generate an executable with debug information to facilitate troubleshooting.
+
+CHECK:
+    To perform a check or verify the correctness of your project.
+
+    >	make CTRL
+
+    This will run a series of checks to ensure that your project is configured correctly.
+
+
+OBJECTS:
+    Real3:
+        Implement a vector in R3
+    Wind:
+        Implement the wind in model
+    State:
+        Implement a state of system parachute-payload
+    PayChute:
+        Implement the characteristics of the system parachute-payload
+    Model:
+        Implement the model
+    Setting:
+        read and save data on a file
+    Simulation:
+        Run the simulation
+    
+    
