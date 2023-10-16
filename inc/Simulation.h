@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 
-#include "../inc/pch.h"
+#include "pch.h"
 
 class Simulation {
 private:
@@ -27,8 +27,9 @@ public:
 
     // ODE
 
-    void write_state(const State& s, double t);
+   
     std::vector<State> retRes() { return res; }
+    void write_state(const State s, double t);
     void run();
 
     /*

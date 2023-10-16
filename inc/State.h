@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "../inc/pch.h"
+#include "pch.h"
 
 //[State - Makes State digestible by odeInt
 class State
@@ -15,20 +15,23 @@ class State
         >
     > {
 
+private:
+    double t = 0;
 public:
     double x, y, z, vx, vy, vz;
+    
 
     // Constructors
     State() : x(0.0), y(0.0), z(0.0), vx(0), vy(0), vz(0) {} // default constructor
 
-    State(const State &other) : x(other.x), y(other.y), z(other.z), vx(other.vx), vy(other.vy), vz(other.vz) {} // copy constructor
+    State(const State &other) : x(other.x), y(other.y), z(other.z), vx(other.vx), vy(other.vy), vz(other.vz), t(other.t) {} // copy constructor
 
-    State(State &&other) noexcept { // move constructor
-        if (this == &other) {
-            x = other.x, y = other.y, z = other.z,
-            vx = other.vx, vy = other.vy, vz = other.vz;
-        }
-    }
+    //State(State &&other) noexcept { // move constructor
+    //    if (this == &other) {
+    //        x = other.x, y = other.y, z = other.z,
+    //        vx = other.vx, vy = other.vy, vz = other.vz;
+    //    }
+    //}
 
     State(const double val)
         : x(val), y(val), z(val), vx(val), vy(val), vz(val) {}
@@ -40,14 +43,14 @@ public:
     State(Real3 pos, Real3 vel)
         : x(pos.x), y(pos.y), z(pos.z), vx(vel.x), vy(vel.y), vz(vel.z) {}
 
-    // Operators
-    State &operator=(State &&other) noexcept {
-        if (this != &other) {
-            x = other.x, y = other.y, z = other.z,
-            vx = other.vx, vy = other.vy, vz = other.vz;
-        }
-        return *this;
-    }
+    //// Operators
+    //State &operator=(State &&other) noexcept {
+    //    if (this != &other) {
+    //        x = other.x, y = other.y, z = other.z,
+    //        vx = other.vx, vy = other.vy, vz = other.vz;
+    //    }
+    //    return *this;
+    //}
 
     State &operator+=(const State &other) {
         x += other.x, y += other.y, z += other.z,
@@ -60,7 +63,11 @@ public:
         vx *= scalar, vy *= scalar, vz *= scalar;
         return *this;
     }
+    State& operator()(const double _t) {
+        t = _t;
+        return *this;
 
+    }
     // other methods
     State abs() {
         return State(   std::abs(x), std::abs(y), std::abs(z),
@@ -71,8 +78,8 @@ public:
     Real3 vel() { return Real3(vx, vy, vz); }
 
     friend std::ostream &operator<<(std::ostream &out, const State &p) {
-     out << p.x << " " << p.y << " " << p.z << " " << p.vx << " " << p.vy << " "
-         << p.vz;
+     out << p.x << "," << p.y << "," << p.z << "," << p.vx << "," << p.vy << ","
+         << p.vz << ",t=" <<p.t;
      return out;
     }
 };

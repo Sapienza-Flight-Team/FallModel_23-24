@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../inc/pch.h"
+#include "pch.h"
 
 // Wind is a functor that can be used to compute the velocity of wind.
 class Wind

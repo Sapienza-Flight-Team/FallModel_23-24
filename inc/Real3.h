@@ -5,7 +5,7 @@
 #include <cmath>
 #include <iostream>
 
-#include "../inc/pch.h"
+#include "pch.h"
 
 //[Real3 - Makes Real3 digestible by odeInt
 class Real3 {
@@ -18,13 +18,13 @@ public:
 
     Real3(const Real3 &other) : x(other.x), y(other.y), z(other.z) {} // copy constructor
 
-    Real3(Real3 &&other) noexcept { // move constructor
-        if (this != &other) {
-            x = other.x,
-            y = other.y,
-            z = other.z;
-        }
-    }
+    //Real3(Real3 &&other) noexcept { // move constructor
+    //    if (this != &other) {
+    //        x = other.x,
+    //        y = other.y,
+    //        z = other.z;
+    //    }
+    //}
 
     Real3(const double val) : x(val), y(val), z(val) {}
 
@@ -32,12 +32,12 @@ public:
         : x(_x), y(_y), z(_z) {}
 
     // Operators
-    Real3 &operator=(Real3 &&other) noexcept {
-        if (this != &other) {
-            x = other.x, y = other.y, z = other.z;
-        }
-        return *this;
-    }
+    //Real3 &operator=(Real3 &&other) noexcept {
+    //    if (this != &other) {
+    //        x = other.x, y = other.y, z = other.z;
+    //    }
+    //    return *this;
+    //}
 
     Real3 &operator+=(const Real3 &p) {
         x += p.x, y += p.y, z += p.z;

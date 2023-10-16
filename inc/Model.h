@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../inc/pch.h"
+#include "pch.h"
 
 class Model
 {
@@ -9,26 +9,26 @@ public:
     ~Model() {}
 
     // Da portarlo in Model.cpp
-    void operator()(State &S, State &S_dot, double t)
+    void operator()(State state, State &state_dot, double t)
     {
-        Real3 pos = S.pos();
-        Real3 vel = S.vel();
-        Real3 wind_vel = Vw(S, pos, t);
+        Real3 pos = state.pos();
+        Real3 vel = state.vel();
+        Real3 wind_vel = Vw(state, pos, t);
 
-        // compute cd of object
-      
+        // compute cd_S
+        double cd_S = pc.Cd_S(state, wind_vel, t);
         // compute coefficient k
-        double k = 0.5 * rho * pc.beta(S, wind_vel, t);
+        double k = 0.5 *rho*cd_S / pc.mass();
         // compute relative velocity
         Real3 wind_rel_vel = vel - wind_vel;
         double wind_rel_vel_mod = wind_rel_vel.mod();
 
-        S_dot.x = vel.x;
-        S_dot.y = vel.y;
-        S_dot.z = vel.z;
-        S_dot.vx = -k * wind_rel_vel.x * wind_rel_vel_mod;
-        S_dot.vy = -k * wind_rel_vel.y * wind_rel_vel_mod;
-        S_dot.vz = -k * wind_rel_vel.z * wind_rel_vel_mod + g;
+        state_dot.x = vel.x;
+        state_dot.y = vel.y;
+        state_dot.z = vel.z;
+        state_dot.vx = -k * wind_rel_vel.x * wind_rel_vel_mod;
+        state_dot.vy = -k * wind_rel_vel.y * wind_rel_vel_mod;
+        state_dot.vz = -k * wind_rel_vel.z * wind_rel_vel_mod + g;
         }
 
 private:

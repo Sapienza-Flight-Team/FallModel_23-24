@@ -1,0 +1,75 @@
+USING THE MAKEFILE:
+    The Makefile in this directory provides four different options for compiling and running your project.
+    Make sure you are in the main project directory where the Makefile is located before executing the following commands.
+
+CONFIGURATION:
+    The Makefile is configurable to adapt to your specific requirements.
+    You can modify it to add static libraries, change compilation options, or make other customizations.
+    To make changes to the Makefile configuration, open the Makefile in the project's main directory and modify the variables and options according to your preferences. Make sure you are familiar with the Makefile format and compilation rules before making significant modifications.
+
+RELEASE:
+    To compile and run the application in release mode.
+
+    >	make RELS
+
+    This will generate an optimized executable ready for use.
+
+PROFILING:
+    To get a good executable to profile the program.
+
+    >	make PROF
+
+    This will generate an executable with profiling information.
+
+DEBUGGING:
+    To compile and run the application in debug mode.
+
+    >	make DEBG
+
+    This will generate an executable with debug information to facilitate troubleshooting.
+
+CHECK:
+    To perform a check or verify the correctness of your project.
+
+    >	make CTRL
+
+    This will run a series of checks to ensure that your project is configured correctly.
+
+
+OBJECTS:
+    Real3:
+        Implement a vector in R3
+        methods:
+            operator + between two vectors
+            operator - between two vectors
+            operator * between two vectors
+            operator * between a vector and a scalar value
+        friend methods:
+            operator << for output in std::ostream
+    State: call Real3
+        Implement a state of system parachute-payload
+        methods:
+            get_phi() get angle in radians against N axe
+            get_gamma() get angle in radians against E axe
+            get_pos() get position
+            get_vel() get velocity
+        friend methods:
+            operator << for output in std::ostream
+    Wind: call Real3
+        Implement the wind in model
+        methods:
+            operator () get wind
+    Setting: call Real3
+        read and save data on a file
+        methods:
+            load() read from a file
+            save() save in a file
+    PayChute: call State
+        Implement the characteristics of the system: parachute-payload
+        methods:
+            get_cd() get the total coefficient of drag of parachute-payload
+            get_mass() get the total mass of parachute-payload
+    Simulation: call ParaLoad, Wind, Settings
+        methods:
+            dyn_fun() dynamic function, return the derivative of the state
+            run() start the Simulation

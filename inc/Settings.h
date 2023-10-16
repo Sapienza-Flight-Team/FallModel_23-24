@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../inc/pch.h"
+#include "pch.h"
 
 
 class Settings {

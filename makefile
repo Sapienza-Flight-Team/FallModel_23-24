@@ -16,7 +16,7 @@ RELS_EXE := release
 
 # Flags
 CTRL_FLAGS := -fsyntax-only
-DEBG_FLAGS := -g  # -Wfatal-errors -Wall
+DEBG_FLAGS := -g -Wfatal-errors -Wall
 PROF_FLAGS := -Wfatal-errors -Wall -pg -O3
 RELS_FLAGS := -w -O3
 
