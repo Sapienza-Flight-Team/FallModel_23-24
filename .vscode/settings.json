@@ -1,10 +1,6 @@
 {
-    "makefile.launchConfigurations": [
-        {
-            "cwd": "/home/meoli/Coding/SFT/FallModel_23-24",
-            "binaryPath": "/home/meoli/Coding/SFT/FallModel_23-24/debug",
-            "binaryArgs": [],
-            "miDebuggerPath": "/usr/bin/gdb"
-        }
-    ]
+    "files.associations": {
+        "fstream": "cpp",
+        "iosfwd": "cpp"
+    }
 }

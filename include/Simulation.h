@@ -23,11 +23,10 @@ public:
         std::string method,
         Model _h,
         State S0);
-    ~Simulation() {}
+    ~Simulation() { }
 
     // ODE
 
-   
     std::vector<State> retRes() { return res; }
     void write_state(const State s, double t);
     void run();

@@ -2,7 +2,6 @@
 
 #include "pch.h"
 
-
 class Settings {
 private:
 public:
