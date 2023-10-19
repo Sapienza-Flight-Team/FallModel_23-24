@@ -1,9 +1,11 @@
 #pragma once
 
+#include <boost/numeric/odeint.hpp>
 #include <string>
 #include <vector>
 
-#include "pch.h"
+#include "Model.h"
+#include "State.h"
 
 class Simulation {
 private:

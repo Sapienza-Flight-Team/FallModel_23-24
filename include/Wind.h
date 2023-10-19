@@ -1,6 +1,7 @@
 #pragma once
 
-#include "pch.h"
+#include "Real3.h"
+#include "State.h"
 
 // Wind is a functor that can be used to compute the velocity of wind.
 class Wind {

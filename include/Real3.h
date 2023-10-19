@@ -5,8 +5,6 @@
 #include <cmath>
 #include <iostream>
 
-#include "pch.h"
-
 //[Real3 - Makes Real3 digestible by odeInt
 class Real3 {
 public:

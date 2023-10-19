@@ -19,7 +19,6 @@ set(SFT_SOURCES
 set(SFT_HEADERS
     ${INC_DIR}/Model.h
     ${INC_DIR}/PayChute.h
-    ${INC_DIR}/pch.h
     ${INC_DIR}/Real3.h
     ${INC_DIR}/Settings.h
     ${INC_DIR}/Simulation.h

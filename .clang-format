@@ -1,5 +1,5 @@
 ---
 BasedOnStyle: LLVM
-SortIncludes: "true"
+SortIncludes: "false"
 ColumnLimit: 80
 BreakBeforeBraces: Attach

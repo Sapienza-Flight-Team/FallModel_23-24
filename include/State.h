@@ -3,9 +3,10 @@
 #include <boost/numeric/odeint.hpp>
 #include <boost/operators.hpp>
 #include <cmath>
+#include <execution>
 #include <iostream>
 
-#include "pch.h"
+#include "Real3.h"
 
 //[State - Makes State digestible by odeInt
 class State
@@ -31,13 +32,13 @@ public:
     } // default constructor
 
     State(const State& other)
-        : x(other.x)
+        : t(other.t)
+        , x(other.x)
         , y(other.y)
         , z(other.z)
         , vx(other.vx)
         , vy(other.vy)
         , vz(other.vz)
-        , t(other.t)
     {
     } // copy constructor
 
@@ -141,22 +142,22 @@ public:
 
 //[State_norm
 // also only for steppers with error control
-namespace boost {
-namespace numeric {
-    namespace odeint {
-        template <>
-        struct vector_space_norm_inf<State> {
-            typedef double result_type;
-            double operator()(const State& p) const
-            {
-                using std::abs;
-                using std::max;
-                return max(max(max(max(max(abs(p.x), abs(p.y)), abs(p.z)), p.vx), p.vy), p.vz); // Orribile, ma così è la vita
-            }
-        };
-    } // namespace odeint
-} // namespace numeric
-} // namespace boost
+namespace boost::numeric::odeint {
+
+template <>
+struct vector_space_norm_inf<State> {
+    typedef double result_type;
+    double operator()(const State& p) const
+    {
+        using std::abs;
+        using std::max;
+
+        auto values = { p.x, p.y, p.z, p.vx, p.vy, p.vz };
+        return *std::max_element(std::execution::unseq,
+            values.begin(), values.end(), [](double a, double b) { return abs(a) < abs(b); });
+    }
+};
+} // namespace boost::numeric::odeint
 //]
 
 // std::ostream &operator<<(std::ostream &out, const State &p) {
