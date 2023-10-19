@@ -1,5 +1,5 @@
 /**
- *  TODO: implementare RK
+ 
  *  TODO: traslazione
  *  TODO: 3 waypoint
  *  TODO: costruire settings
