@@ -4,8 +4,8 @@ GPS dms2gps(const DMS &dms)
 {
     GPS ret;
     for (int i = 0; i < 3; i++) {
-        ret.lat += dms.N[i] / pow(60, i + 1);
-        ret.lon += dms.E[i] / pow(60, i + 1);
+        ret.lat += dms.N[i] / pow(60, i);
+        ret.lon += dms.E[i] / pow(60, i);
     }
     return ret;
 }
