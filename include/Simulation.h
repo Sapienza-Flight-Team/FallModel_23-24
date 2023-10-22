@@ -37,6 +37,6 @@ class Simulation {
     void write_state(const State s, double t);
     void run();
 
-    std::vector<DMS> get_waypoints(const DMS &dms, double heading,
+    DMS get_drop(const DMS &dms, double heading,
                                    double distance);
 };

@@ -52,10 +52,10 @@ void Simulation::run() {
     }
 }
 
-std::vector<DMS> Simulation::get_waypoints(const DMS &dms_target,
-                                           double heading, double distance) {
+DMS Simulation::get_drop(const DMS &dms_target, double heading,
+                         double distance) {
     /**
-     * @brief Get three waypoints knowing target DMS and heading(degree).
+     * @brief Get drop waypoint (DMS) knowing target DMS and heading(degree).
      * Implies simulation already run
      *
      *@param
@@ -86,15 +86,15 @@ std::vector<DMS> Simulation::get_waypoints(const DMS &dms_target,
             gps_target.lon +
             atan2(sin(head_rad) * sin(d / R_E) * cos(gps_target.lat),
                   cos(d / R_E) - sin(gps_target.lat) * sin(gps_drop.lat));
-                  
+
         // Convert gps_drop to degree
         gps_drop.lat = gps_drop.lat * 180 / M_PI;
         gps_drop.lon = gps_drop.lon * 180 / M_PI;
 
         dms_drop = gps2dms(gps_drop);
 
-        return ret;
+        return dms_drop;
     }
 
-    return std::vector<DMS>();
+    return DMS();
 }
