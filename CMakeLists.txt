@@ -13,6 +13,7 @@ set(SRC_DIR
 
 set(SFT_SOURCES
     ${SRC_DIR}/Simulation.cpp
+    ${SRC_DIR}/Waypoint.cpp
     ${SRC_DIR}/main.cpp
 )
 
@@ -24,6 +25,7 @@ set(SFT_HEADERS
     ${INC_DIR}/Simulation.h
     ${INC_DIR}/State.h
     ${INC_DIR}/Wind.h
+    ${INC_DIR}/Waypoint.h
 )
 
 add_executable(

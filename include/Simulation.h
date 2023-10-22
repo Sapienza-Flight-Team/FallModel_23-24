@@ -7,6 +7,8 @@
 #include "Model.h"
 #include "State.h"
 #include "Waypoint.h"
+
+
 class Simulation {
    private:
     // Methods parameters
@@ -34,7 +36,6 @@ class Simulation {
     // ODE
 
     std::vector<State> retRes() { return res; }
-    void write_state(const State s, double t);
     void run();
 
     DMS get_drop(const DMS &dms, double heading,
