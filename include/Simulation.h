@@ -38,6 +38,6 @@ class Simulation {
     std::vector<State> retRes() { return res; }
     void run();
 
-    DMS get_drop(const DMS &dms, double heading,
-                                   double distance);
+    DMS get_drop(const DMS &dms, double heading);
+    std::vector<GPS> way_array(const GPS &drop, double heading, double d);
 };

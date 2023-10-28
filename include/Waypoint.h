@@ -15,3 +15,5 @@ typedef struct {
 GPS dms2gps(const DMS &dms);
 
 DMS gps2dms(const GPS &gps);
+
+GPS translate_gps(const GPS &gps, double d, double head);
