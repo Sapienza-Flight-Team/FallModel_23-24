@@ -54,8 +54,10 @@ int main() {
     Wind Vw(wind_law);
     BallisticModel bm(pc, Vw);
     State S0(0, 0, -40, 22, 0, 0);
-    Simulation s(0.1, 1, "");
+    Simulation s(0.01, 10, "");
     size_t n_steps = ceil(10 / 0.01) + 1;
+
+    s.run(&bm, S0);
     // {
     //     // Test auto allocation
     //     std::cout << "Auto allocation\n";
@@ -95,25 +97,24 @@ int main() {
     //     // }
     //     std::cout << "End of conditional propagation\n";
     // }
-    {
-        std::cout << "Parallel propagation\n";
-        Simulation ps(0.1, 1, "");
-        std::vector vS0 = createVS0(10, S0, 1);
-        ps.run_parallel_ic(&bm, vS0);
-        std::unique_ptr<State> res;
-        ps.own_res(res);
-        // Test parallel propagation
-        size_t idx = 0;
-        // for (auto& S : vS0) {
-        //     std::string path =
-        //         pPath + "test_parallel" + std::to_string(idx) + ".csv";
-        //     std::ofstream ofile(path);
+    // {
+    //     std::cout << "Parallel propagation\n";
+    //     Simulation ps(0.1, 1, "");
+    //     std::vector vS0 = createVS0(10, S0, 1);
+    //     ps.run_parallel_ic(&bm, vS0);
 
-        //     for (size_t j = idx * n_steps; j < (idx + 1) * n_steps; j++) {
-        //         ofile << res.get()[j] << "\n";
-        //     }
-        //     idx++;
-        // }
-        std::cout << "End of parallel propagation\n";
-    }
+    //     // Test parallel propagation
+    //     size_t idx = 0;
+    //     // for (auto& S : vS0) {
+    //     //     std::string path =
+    //     //         pPath + "test_parallel" + std::to_string(idx) + ".csv";
+    //     //     std::ofstream ofile(path);
+
+    //     //     for (size_t j = idx * n_steps; j < (idx + 1) * n_steps; j++) {
+    //     //         ofile << res.get()[j] << "\n";
+    //     //     }
+    //     //     idx++;
+    //     // }
+    //     std::cout << "End of parallel propagation\n";
+    // }
 }
