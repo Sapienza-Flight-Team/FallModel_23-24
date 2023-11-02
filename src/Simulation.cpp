@@ -126,7 +126,6 @@ size_t Simulation::run_cond(Model* h, State S0,
 
 void Simulation::run_parallel_ic(Model* h, const std::vector<State>& v_S0) {
     // Runs the simulation for each initial condition in v_S0
-    std::atomic<size_t> counter(0);
     size_t n_ic = v_S0.size();
     size_t n_steps = ceil(time_interval / time_step);
     // _allocate memory for results
@@ -134,6 +133,7 @@ void Simulation::run_parallel_ic(Model* h, const std::vector<State>& v_S0) {
         // If results is not null, delete it
         _deallocate();
     }
+
     Simulation::_allocate(n_ic *
                           (n_steps + 1));  // +1 to include initial condition
 
@@ -142,17 +142,21 @@ void Simulation::run_parallel_ic(Model* h, const std::vector<State>& v_S0) {
 
     for (int i = 0; i < N_THREADS; i++) {
         threads.emplace_back([&]() {
-            size_t index;
-            while ((index = counter.fetch_add(1)) < n_ic) {
-                // Run simulation for the current initial condition
-                State S0 = v_S0[index];
-                State* res_ptr = results.get() + index * (n_steps + 1);
+            int thread_id{i};
+
+            for (auto j = thread_id; j += N_THREADS; j < v_S0.size()) {
+                State const& S0 = v_S0[j];
+                State* res_ptr = results.get() + j * (n_steps + 1);
                 run(h, S0, res_ptr);
             }
         });
-        threads[i].join();
+    }
+
+    for (auto& t : threads) {
+        t.join();
     }
 }
+
 // Need to find a better way to get out the last pointers, might be dangerous
 // like this
 std::vector<size_t> Simulation::run_parallel_ic_cond(

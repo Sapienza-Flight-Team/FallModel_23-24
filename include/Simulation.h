@@ -39,6 +39,7 @@ class Simulation {
     std::string method;   /**< Method to be used for simulation. */
     double time_step;     /**< Time step for simulation. */
     double time_interval; /**< Time interval for simulation. */
+    
     std::unique_ptr<State> results =
         nullptr;         /**< Pointer to result array of the simulation. */
     size_t res_size = 0; /**< Size of result array. */
