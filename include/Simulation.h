@@ -31,22 +31,13 @@ typedef struct {
  *
  */
 class Simulation {
-    using simulation_predicate =
-        std::function<bool((State S0, State S0_dot, double t))>;
-
    private:
     // Methods parameters
-    std::string method;   /**< Method to be used for simulation. */
-    double time_step;     /**< Time step for simulation. */
-    double time_interval; /**< Time interval for simulation. */
-
-    std::vector<State> results;
-
-    void _run_thread(Model* h, State S0, std::span<State> res_span,
-                     std::atomic<int>& id, std::mutex& mtx);
-    void _run_thread_cond(Model* h, State S0, simulation_predicate cond_func,
-                          std::span<State> res_span, std::atomic<int>& id,
-                          std::mutex& mtx);
+    std::string method;         /**< Method to be used for simulation. */
+    double time_step;           /**< Time step for simulation. */
+    double time_interval;       /**< Time interval for simulation. */
+    std::vector<State> results; /**< Vector containing the results of the
+                                     simulation. */
 
    public:
     /**
@@ -83,19 +74,7 @@ class Simulation {
      * @param S0 Initial state of the system.
      * @param res_ptr Pointer to the result array.
      */
-    void run(Model* h, State S0, std::span<State> res_ptr = {});
-
-    /**
-     * @brief Runs the simulation until a certain condition is met.
-     *
-     * @param h Pointer to the Model object.
-     * @param S0 Initial state of the system.
-     * @param cond_func Function pointer to the condition function.
-     * @param res_ptr Pointer to the result array.
-     * @return State* Pointer to the final state of the system.
-     */
-    size_t run_cond(Model* h, State S0, simulation_predicate cond_func,
-                    std::span<State> res_ptr = {});
+    std::span<State> run(Model* h, State S0, std::span<State> res_ptr = {});
 
     /**
      * @brief Runs the simulation in parallel for multiple initial conditions.
@@ -113,8 +92,9 @@ class Simulation {
      * @param v_S0 Vector of initial states of the system.
      * @param cond_func Function pointer to the condition function.
      */
-    std::vector<std::span<State>> run_parallel_ic_cond(
-        Model* h, std::span<State> v_S0, simulation_predicate cond_func);
+    std::vector<std::span<State>> run_parallel_ic_cond(Model* h,
+                                                       std::span<State> v_S0,
+                                                       ConFun cond_func);
 
     std::vector<State> ret_res() { return this->results; }
 };

@@ -19,7 +19,8 @@ void Simulation::change_settings(ODESettings settings) {
     method = settings.method;
 }
 
-void Simulation::run(Model* h, State S0, std::span<State> res_span) {
+std::span<State> Simulation::run(Model* h, State S0,
+                                 std::span<State> res_span) {
     /**
      * Runs the dynamical model simulation using the provided Model object and
      * initial state. If a pointer to a State object is provided, the results
@@ -46,71 +47,48 @@ void Simulation::run(Model* h, State S0, std::span<State> res_span) {
     if (res_span.empty()) {
         // res_span not provided, allocate
         results.clear();
-        results.reserve(n_steps + 1);
+        results.resize(n_steps + 1);
         res_span = results;
     }
 
     res_span[0] = S0;
     double t = 0;
+    if (h->conditionFunc) {
+        /*
+            Might be nice to add a check of multiple conditions, modifyng the
+            internal Model.operator() to another ode law
+            Can try to enable 2 or more functions objects, returning the sum of ode 
+            laws
+            But in this way i need to figure how to stop integration 
+            where it doesnt make sense
 
-    for (int i = 0; i < n_steps; i++) {
-        t = i * time_step;
-        stepper.do_step(h_ref, S0_step, t, out, time_step);
-        res_span[i + 1] = out(t);
-        S0_step = out;
-    }
-}
+            For now it just stops integration and gg
+        */
 
-size_t Simulation::run_cond(Model* h, State S0, simulation_predicate cond_func,
-                            std::span<State> res) {
-    /**
-     * Runs a simulation of a model until a given condition is met.
-     *
-     *
-     * @param h Pointer to the model to simulate.
-     * @param S0 Initial state of the simulation.
-     * @param cond_func Function that returns true if the simulation should
-     * stop.
-     * @param res Pointer to the array where the results will be stored. If
-     * null, memory will be allocated.
-     * @note If res is given, memory must be managed by the caller
-     * @return Number of steps executed until cond.
-     */
+        // Condition function is defined, run until condition is met
+        for (int i = 0; i < n_steps; i++) {
+            t = i * time_step;
+            stepper.do_step(h_ref, S0_step, t, out, time_step);
 
-    typedef odeint::runge_kutta4<State, double, State, double,
-                                 odeint::vector_space_algebra>
-        rk4;
-    rk4 stepper;
-    State S0_step = S0;
-    State out;
-    std::reference_wrapper<Model> h_ref = *h;
-    int n_steps = ceil(time_interval / time_step);
-
-    if (res.empty()) {
-        // res_span not provided, allocate
-        results.clear();
-        results.reserve(n_steps + 1);
-        res = results;
-    }
-
-    res[0] = S0;
-    double t = 0;
-
-    for (int i = 0; i < n_steps; i++) {
-        t = i * time_step;
-        stepper.do_step(h_ref, S0_step, t, out, time_step);
-
-        if (cond_func(S0_step, out, t)) {
-            // Would be nice to do a weighted average of the last two states
-            // until last.z > 0
-
-            return i;
+            if (h->conditionFunc(S0_step, out, t + time_step)) {
+                // Would be nice to do a weighted average of the last two states
+                // until last.z > 0
+                return res_span.subspan(0, i + 1);
+            }
+            res_span[i + 1] = out(t + time_step);
+            S0_step = out;
         }
-        res[i + 1] = out(t);
-        S0_step = out;
+    } else {
+        // Condition function is not defined, run for n_steps
+        for (int i = 0; i < n_steps; i++) {
+            t = i * time_step;
+            stepper.do_step(h_ref, S0_step, t, out, time_step);
+            res_span[i + 1] = out(t + time_step);
+            S0_step = out;
+        }
     }
-    return n_steps;  // If the condition is never met, return the last
-                     // state
+    return res_span;  // If the condition is never met, return the last
+                      // state
 }
 
 // void Simulation::run_parallel_ic(Model* h, std::span<State> v_S0) {
@@ -144,7 +122,7 @@ size_t Simulation::run_cond(Model* h, State S0, simulation_predicate cond_func,
 //     for (auto& t : threads) {
 //         t.join();
 //     }
-//     threads.clear();
+//
 // }
 
 // // Need to find a better way to get out the last pointers, might be dangerous

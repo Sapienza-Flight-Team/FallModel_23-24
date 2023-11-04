@@ -43,60 +43,40 @@ std::vector<State> createVS0(size_t elements, State S0, double variation) {
     }
     return v_S0;
 }
-bool cond_func(State S0, State S1, double t) { return S1.pos().z > 0; }
+
+ConFun f_stop = [](State S0, State S0_dot, double t) {
+    return S0_dot.pos().z > 0;
+};
 
 std::string fPath = {"../test/"};
 std::string pPath = {"../test/para/"};
+
+using namespace std::filesystem;
+path p = path("../test/para/");
 
 int main() {
     PayChute pc(cd_payload, sur_payload, load_mass, cd_parachute, sur_parachute,
                 chute_mass);
     Wind Vw(wind_law);
-    BallisticModel bm(pc, Vw);
+    BallisticModel bm(pc, Vw, f_stop);
     State S0(0, 0, -40, 22, 0, 0);
     Simulation s(0.01, 10, "");
     size_t n_steps = ceil(10 / 0.01) + 1;
 
-    s.run(&bm, S0);
-    // {
-    //     // Test auto allocation
-    //     std::cout << "Auto allocation\n";
-    //     s.run(&bm, S0);
-    //     std::unique_ptr<State> res;
-    //     s.own_res(res);
-    //     // std::ofstream file("../test/test_auto.csv");
-    //     // for (size_t i = 0; i < n_steps; i++) {
-    //     //     file << res.get()[i] << "\n";
-    //     // }
-    //     std::cout << "End of auto allocation\n";
-    // }
-    // {
-    //     // Test manual allocation
-    //     std::cout << "Manual allocation\n";
-    //     size_t n_steps = ceil(10 / 0.01) + 1;
-    //     State* res = new State[n_steps];
-    //     s.run(&bm, S0, res);
-    //     // std::ofstream file("../test/test_manual.csv");
+    {
+        // Test auto allocation
+        std::cout << "Auto allocation\n";
+        s.run(&bm, S0);
 
-    //     // for (size_t i = 0; i < n_steps; i++) {
-    //     //     file << res[i] << "\n";
-    //     // }
-    //     // std::cout << "End of manual allocation\n";
-    // }
-    // {
-    //     // Test conditional propagation
+        std::vector<State> res = s.ret_res();
 
-    //     std::cout << "Conditional propagation\n";
-    //     size_t n_taken = s.run_cond(&bm, S0, cond_func);
-    //     std::unique_ptr<State> res;
-    //     s.own_res(res);
-    //     // std::ofstream file(fPath + "test_cond.csv");
+        std::ofstream file("../test/test_auto.csv");
+        for (size_t i = 0; i < n_steps; i++) {
+            file << res[i] << "\n";
+        }
+        std::cout << "End of auto allocation\n";
+    }
 
-    //     // for (size_t i = 0; i < n_taken; i++) {
-    //     //     file << res.get()[i] << "\n";
-    //     // }
-    //     std::cout << "End of conditional propagation\n";
-    // }
     // {
     //     std::cout << "Parallel propagation\n";
     //     Simulation ps(0.1, 1, "");
@@ -105,16 +85,16 @@ int main() {
 
     //     // Test parallel propagation
     //     size_t idx = 0;
-    //     // for (auto& S : vS0) {
-    //     //     std::string path =
-    //     //         pPath + "test_parallel" + std::to_string(idx) + ".csv";
-    //     //     std::ofstream ofile(path);
+    //     for (auto& S : vS0) {
+    //         std::string path =
+    //             pPath + "test_parallel" + std::to_string(idx) + ".csv";
+    //         std::ofstream ofile(path);
 
-    //     //     for (size_t j = idx * n_steps; j < (idx + 1) * n_steps; j++) {
-    //     //         ofile << res.get()[j] << "\n";
-    //     //     }
-    //     //     idx++;
-    //     // }
+    //         for (size_t j = idx * n_steps; j < (idx + 1) * n_steps; j++) {
+    //             ofile << res.get()[j] << "\n";
+    //         }
+    //         idx++;
+    //     }
     //     std::cout << "End of parallel propagation\n";
     // }
 }
