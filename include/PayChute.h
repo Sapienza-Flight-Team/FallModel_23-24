@@ -29,15 +29,6 @@ public:
     }
     ~PayChute() { }
 
-    /*
-    double get_pay_cd(Real3 x, Real3 v s, double t) { return load.cd_law(s,
-    t); } double get_pay_sur(Real3 x, Real3 v s, double t) { return
-    load.sur_law(s, t); } double get_pay_mass() const { return load.mass;
-    } double get_chute_cd(Real3 x, Real3 v s, double t) { return
-    chute.cd_law(s, t); } double get_chute_sur(Real3 x, Real3 v s, double t)
-    { return chute.sur_law(s, t); } double get_chute_mass() const { return
-    chute.mass; }
-    */
 
     double Cd_S(State state, Real3 Vw, double t)
     {

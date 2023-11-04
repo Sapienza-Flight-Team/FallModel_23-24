@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 project(sft_fall_model CXX)
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 
 set(INC_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -10,20 +10,24 @@ set(INC_DIR
 set(SRC_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
-
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 set(SFT_SOURCES
+    ${SRC_DIR}/BallisticModel.cpp
     ${SRC_DIR}/Simulation.cpp
+    ${SRC_DIR}/Waypoint.cpp
     ${SRC_DIR}/main.cpp
 )
 
 set(SFT_HEADERS
     ${INC_DIR}/Model.h
+    ${INC_DIR}/BallisticModel.h
     ${INC_DIR}/PayChute.h
     ${INC_DIR}/Real3.h
     ${INC_DIR}/Settings.h
     ${INC_DIR}/Simulation.h
     ${INC_DIR}/State.h
     ${INC_DIR}/Wind.h
+    ${INC_DIR}/Waypoint.h
 )
 
 add_executable(
