@@ -100,7 +100,20 @@ std::vector<std::span<State>> Simulation::run_parallel_ic(
     size_t n_steps = ceil(time_interval / time_step);
 
     results.clear();
-    results.resize(n_ic * (n_steps + 1));
+    try {
+        results.resize(n_ic * (n_steps + 1));
+    } catch (std::bad_alloc& ba) {
+        std::cerr << "bad_alloc caught: " << ba.what() << '\n';
+        std::cerr << "Trying to allocate " << n_ic * (n_steps + 1)*sizeof(State)/std::pow(10, 9) << " GB\n";
+        std::cerr << "Not enough memory to allocate results vector\n";
+        std::cerr << "Try reducing the number of initial conditions\n";
+        std::cerr << "or decreasing the time interval\n";
+        std::cerr << "or increasing the time step\n";
+    
+        std::cerr << "or buying more RAM\n";
+        std::exit(EXIT_FAILURE);
+    }
+
 
     // Create threads
     std::mutex mtx;
@@ -134,45 +147,3 @@ std::vector<std::span<State>> Simulation::run_parallel_ic(
     return res_spans;
 }
 
-// // Need to find a better way to get out the last pointers, might be dangerous
-// // like this
-// std::vector<std::span<State>> Simulation::run_parallel_ic_cond(
-//     Model* h, std::span<State> v_S0, simulation_predicate cond_func) {
-//     // Runs the simulation for each initial condition in v_S0
-//     std::atomic<size_t> counter = 0;
-//     size_t n_ic = v_S0.size();
-//     size_t n_steps = ceil(time_interval / time_step);
-//     std::mutex mtx;
-//     std::vector<std::span<State>> map_states(n_ic);
-
-//     results.clear();
-//     results.reserve(n_ic * (n_steps + 1));
-
-//     // Create threads
-//     std::vector<std::thread> threads(N_THREADS);
-
-//     for (int i = 0; i < N_THREADS; i++) {
-//         threads.emplace_back([&]() {
-//             int thread_id{i};
-
-//             for (auto j = thread_id; j += N_THREADS; j < v_S0.size()) {
-//                 State const& S0 = v_S0[j];
-//                 size_t res_size = run_cond(
-//                     h, S0, cond_func,
-//                     {results.begin() + j * (n_steps + 1), n_steps + 1});
-//                 std::span res_span{results.begin() + j * (n_steps + 1),
-//                                    res_size};
-//                 // Lock res_span for write
-//                 mtx.lock();
-//                 map_states.push_back(res_span);
-//                 mtx.unlock();
-//             }
-//         });
-//     }
-
-//     // Wait for all threads to finish
-//     for (auto& thread : threads) {
-//         thread.join();
-//     }
-//     return map_states;
-// }

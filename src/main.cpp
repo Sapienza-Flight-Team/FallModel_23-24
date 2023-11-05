@@ -8,6 +8,7 @@
 #include <chrono>
 #include <filesystem>
 #include <fstream>
+#include <iomanip>
 
 #include "../include/pch.h"
 
@@ -61,11 +62,10 @@ int main() {
     Wind Vw(wind_law);
     BallisticModel bm(pc, Vw, f_stop);
     State S0(0, 0, -40, 22, 0, 0);
-    size_t n_ic = 100000;
-    std::vector vS0 = createVS0(n_ic, S0, 0.05);
 
     {
-        // Test auto allocation
+        size_t n_ic = 10000;  // 10k ic
+        std::vector vS0 = createVS0(n_ic, S0, 0.05);
 
         std::cout << "--- Serial code --- n_iterations: " << n_ic << "\n";
 
@@ -78,7 +78,12 @@ int main() {
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(stop - start);
         std::cout << "Elapsed time: " << duration.count() << " s\n";
-        std::cout << "Time per run: " << duration.count() / n_ic << " s\n";
+        std::cout << "Time per run: " << std::fixed << std::setprecision(10)
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(
+                         duration)
+                             .count() /
+                         n_ic
+                  << "ms\n";
 
         std::vector<State> res = s.ret_res();
 
@@ -86,12 +91,15 @@ int main() {
         // for (size_t i = 0; i < res.size(); i++) {
         //     file << res[i] << "\n";
         // }
-        std::cout << "--- End of auto allocation --- \n\n";
+        std::cout << "--- End of serial code --- \n\n";
     }
 
     {
+        size_t n_ic = 10000;  // 10k ic
+        std::vector vS0 = createVS0(n_ic, S0, 0.05);
         std::cout << "--- Parallel propagation --- n_iterations: " << n_ic
                   << "\n";
+                
         Simulation ps(0.01, 10, "");
         auto start = std::chrono::high_resolution_clock::now();
         std::vector<std::span<State>> res_span = ps.run_parallel_ic(&bm, vS0);
@@ -99,8 +107,18 @@ int main() {
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(stop - start);
         std::cout << "Elapsed time: " << duration.count() << " s\n";
-        std::cout << "Time per run: " << duration.count() / n_ic << "s\n";
 
+        std::cout << "Time per run: " << std::fixed << std::setprecision(10)
+                  << std::chrono::duration_cast<std::chrono::milliseconds>(
+                         duration)
+                             .count() /
+                         n_ic
+                  << "ms\n";
+
+        // // Clean result folder
+        // for (auto& entry : directory_iterator(p)) {
+        //     remove(entry.path());
+        // }
         // Write results to file
         // size_t idx = 0;
         // for (auto& r_sp : res_span) {
@@ -113,6 +131,8 @@ int main() {
         //     }
         //     idx++;
         // }
+
         std::cout << "--- End of parallel propagation--- \n";
     }
+    return 0;
 }

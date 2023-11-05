@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(INC_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
-
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set(SRC_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -48,6 +48,7 @@ target_compile_options(
     -Wall
     -Wextra
     -Wpedantic
+    -O0
 )
 
 target_include_directories(
