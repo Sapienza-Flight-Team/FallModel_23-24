@@ -5,6 +5,7 @@
  *  TODO: costruire settings
  */
 
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 
@@ -60,41 +61,58 @@ int main() {
     Wind Vw(wind_law);
     BallisticModel bm(pc, Vw, f_stop);
     State S0(0, 0, -40, 22, 0, 0);
-    Simulation s(0.01, 10, "");
-    size_t n_steps = ceil(10 / 0.01) + 1;
+    size_t n_ic = 100000;
+    std::vector vS0 = createVS0(n_ic, S0, 0.05);
 
     {
         // Test auto allocation
-        std::cout << "Auto allocation\n";
-        s.run(&bm, S0);
+
+        std::cout << "--- Serial code --- n_iterations: " << n_ic << "\n";
+
+        Simulation s(0.01, 10, "");
+        auto start = std::chrono::high_resolution_clock::now();
+        for (size_t i = 0; i < n_ic; i++) {
+            s.run(&bm, vS0[i]);
+        }
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        std::cout << "Elapsed time: " << duration.count() << " s\n";
+        std::cout << "Time per run: " << duration.count() / n_ic << " s\n";
 
         std::vector<State> res = s.ret_res();
 
-        std::ofstream file("../test/test_auto.csv");
-        for (size_t i = 0; i < n_steps; i++) {
-            file << res[i] << "\n";
-        }
-        std::cout << "End of auto allocation\n";
+        // std::ofstream file("../test/test_auto.csv");
+        // for (size_t i = 0; i < res.size(); i++) {
+        //     file << res[i] << "\n";
+        // }
+        std::cout << "--- End of auto allocation --- \n\n";
     }
 
-    // {
-    //     std::cout << "Parallel propagation\n";
-    //     Simulation ps(0.1, 1, "");
-    //     std::vector vS0 = createVS0(10, S0, 1);
-    //     ps.run_parallel_ic(&bm, vS0);
+    {
+        std::cout << "--- Parallel propagation --- n_iterations: " << n_ic
+                  << "\n";
+        Simulation ps(0.01, 10, "");
+        auto start = std::chrono::high_resolution_clock::now();
+        std::vector<std::span<State>> res_span = ps.run_parallel_ic(&bm, vS0);
+        auto stop = std::chrono::high_resolution_clock::now();
+        auto duration =
+            std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        std::cout << "Elapsed time: " << duration.count() << " s\n";
+        std::cout << "Time per run: " << duration.count() / n_ic << "s\n";
 
-    //     // Test parallel propagation
-    //     size_t idx = 0;
-    //     for (auto& S : vS0) {
-    //         std::string path =
-    //             pPath + "test_parallel" + std::to_string(idx) + ".csv";
-    //         std::ofstream ofile(path);
+        // Write results to file
+        // size_t idx = 0;
+        // for (auto& r_sp : res_span) {
+        //     std::string path =
+        //         pPath + "test_parallel" + std::to_string(idx) + ".csv";
+        //     std::ofstream ofile(path);
 
-    //         for (size_t j = idx * n_steps; j < (idx + 1) * n_steps; j++) {
-    //             ofile << res.get()[j] << "\n";
-    //         }
-    //         idx++;
-    //     }
-    //     std::cout << "End of parallel propagation\n";
-    // }
+        //     for (auto& state : r_sp) {
+        //         ofile << state << "\n";
+        //     }
+        //     idx++;
+        // }
+        std::cout << "--- End of parallel propagation--- \n";
+    }
 }

@@ -13,7 +13,7 @@
 #include "Model.h"
 #include "State.h"
 
-constexpr inline uint N_THREADS = 6;
+constexpr inline size_t N_THREADS = 6;
 
 /**
  * @brief Struct containing settings for an ODE simulation.
@@ -82,7 +82,8 @@ class Simulation {
      * @param h Pointer to the Model object.
      * @param v_S0 Vector of initial states of the system.
      */
-    void run_parallel_ic(Model* h, std::span<State> v_S0);
+    std::vector<std::span<State>> run_parallel_ic(Model* h,
+                                                  std::span<State> v_S0);
 
     /**
      * @brief Runs the simulation in parallel for multiple initial conditions

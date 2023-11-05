@@ -57,9 +57,8 @@ std::span<State> Simulation::run(Model* h, State S0,
         /*
             Might be nice to add a check of multiple conditions, modifyng the
             internal Model.operator() to another ode law
-            Can try to enable 2 or more functions objects, returning the sum of ode 
-            laws
-            But in this way i need to figure how to stop integration 
+            Can try to enable 2 or more functions objects, returning the sum of
+           ode laws But in this way i need to figure how to stop integration
             where it doesnt make sense
 
             For now it just stops integration and gg
@@ -91,39 +90,49 @@ std::span<State> Simulation::run(Model* h, State S0,
                       // state
 }
 
-// void Simulation::run_parallel_ic(Model* h, std::span<State> v_S0) {
-//     // Runs the simulation for each initial condition in v_S0
-//     size_t const& n_ic = v_S0.size();
-//     size_t n_steps = ceil(time_interval / time_step);
+std::vector<std::span<State>> Simulation::run_parallel_ic(
+    Model* h, std::span<State> v_S0) {
+    // Runs the simulation for each initial condition in v_S0
 
-//     results.clear();
-//     results.reserve(n_ic * (n_steps + 1));
+    std::reference_wrapper<Model> h_ref = *h;
 
-//     // Create threads
-//     std::vector<std::thread> threads(N_THREADS);
-//     std::reference_wrapper<Model> h_ref = *h;
+    size_t const& n_ic = v_S0.size();
+    size_t n_steps = ceil(time_interval / time_step);
 
-//     for (int i = 0; i < N_THREADS; i++) {
-//         threads.emplace_back(
-//             [this](int i, std::span<State> v_S0, int n_steps,
-//                    std::span<State> results, Model* h) {
-//                 std::cout << "Spawned thread " << i << std::endl;
-//                 size_t thread_id{i};
+    results.clear();
+    results.resize(n_ic * (n_steps + 1));
 
-//                 for (auto j = thread_id; j += N_THREADS; j < v_S0.size()) {
-//                     State const& S0 = v_S0[j];
-//                     run(h, S0,
-//                         {results.begin() + j * (n_steps + 1), n_steps + 1});
-//                 }
-//             },
-//             i, v_S0, n_steps, results, h);
-//     }
+    // Create threads
+    std::mutex mtx;
 
-//     for (auto& t : threads) {
-//         t.join();
-//     }
-//
-// }
+    std::vector<std::span<State>> res_spans(
+        n_ic);  // Reserve space for return spans
+
+    std::vector<std::thread> threads(N_THREADS);  // Reserve space for threads
+
+    for (size_t i = 0; i < N_THREADS; i++) {
+        threads[i] = std::thread{[&, i]() {
+            size_t thread_id{i};
+
+            for (auto j = thread_id; j < n_ic; j += N_THREADS) {
+                State const& S0 = v_S0[j];
+                std::span<State> r_sp = run(
+                    h, S0, {results.begin() + j * (n_steps + 1), n_steps + 1});
+                // Lock res_spans for write
+                mtx.lock();
+                res_spans[j] = r_sp;
+                mtx.unlock();
+            }
+        }};
+    }
+
+    for (auto& t : threads) {
+        if (t.joinable()) {
+            t.join();
+        }
+    }
+    return res_spans;
+}
 
 // // Need to find a better way to get out the last pointers, might be dangerous
 // // like this
