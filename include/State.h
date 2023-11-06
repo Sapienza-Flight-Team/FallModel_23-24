@@ -16,6 +16,9 @@ class State
     double t = 0;
 
    public:
+    // TODO: Vectorize - Dimensions of this vector depend on the model
+    // Inoltre non è detto che tutte le variabili siano necessarie,
+    // come per i modelli 1D o 2D
     double x, y, z, vx, vy, vz;
 
     // Constructors
@@ -46,6 +49,7 @@ class State
         return *this;
     }
     // other methods
+    double abs() const { return std::sqrt(x * x + y * y + z * z); }
     State abs() {
         return State(std::abs(x), std::abs(y), std::abs(z), std::abs(vx),
                      std::abs(vy), std::abs(vz));

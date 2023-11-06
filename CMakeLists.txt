@@ -28,6 +28,7 @@ set(SFT_HEADERS
     ${INC_DIR}/State.h
     ${INC_DIR}/Wind.h
     ${INC_DIR}/Waypoint.h
+    ${INC_DIR}/BaseStepper.h
 )
 
 add_executable(

@@ -1,14 +1,15 @@
 /**
-
- *  TODO: traslazione
- *  TODO: 3 waypoint
- *  TODO: costruire settings
+ * TODO: Vectorization of state - Depends on model
+ *
  */
 
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <iomanip>
+
+
+
 
 #include "../include/pch.h"
 
@@ -69,7 +70,7 @@ int main() {
 
         std::cout << "--- Serial code --- n_iterations: " << n_ic << "\n";
 
-        Simulation s(0.01, 10, "");
+        Simulation s(0.01, 10, "rk4");
         auto start = std::chrono::high_resolution_clock::now();
         for (size_t i = 0; i < n_ic; i++) {
             s.run(&bm, vS0[i]);
@@ -85,7 +86,8 @@ int main() {
                          n_ic
                   << "ms\n";
 
-        std::vector<State> res = s.ret_res();
+        std::vector<State> res;
+        s.own_res(res);
 
         // std::ofstream file("../test/test_auto.csv");
         // for (size_t i = 0; i < res.size(); i++) {
@@ -99,10 +101,11 @@ int main() {
         std::vector vS0 = createVS0(n_ic, S0, 0.05);
         std::cout << "--- Parallel propagation --- n_iterations: " << n_ic
                   << "\n";
-                
+
         Simulation ps(0.01, 10, "");
         auto start = std::chrono::high_resolution_clock::now();
-        std::vector<std::span<State>> res_span = ps.run_parallel_ic(&bm, vS0);
+        std::vector<std::span<State>> res_span =
+            ps.run_parallel_ic(&bm, vS0);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(stop - start);
