@@ -1,10 +1,9 @@
 #pragma once
 
-#include <boost/numeric/odeint.hpp>
+#include <../external/odeint.hpp>
 #include <cmath>
 #include <functional>
 #include <memory>
-
 #include <span>
 #include <string>
 #include <thread>

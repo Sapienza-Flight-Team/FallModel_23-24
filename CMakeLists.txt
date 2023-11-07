@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(sft_fall_model CXX)
 set(CMAKE_CXX_STANDARD 20)
 
+
 set(INC_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -18,6 +19,7 @@ set(SFT_SOURCES
     ${SRC_DIR}/main.cpp
 )
 
+
 set(SFT_HEADERS
     ${INC_DIR}/Model.h
     ${INC_DIR}/BallisticModel.h
@@ -30,6 +32,34 @@ set(SFT_HEADERS
     ${INC_DIR}/Waypoint.h
     ${INC_DIR}/BaseStepper.h
 )
+
+
+set(CMAKE_CXX_FLAGS_PROFILING "-O2 -g -pg" CACHE STRING
+    "Flags used by the C++ compiler during Profiling builds."
+    FORCE )
+set(CMAKE_C_FLAGS_PROFILING "-O2 -g -pg" CACHE STRING
+    "Flags used by the C compiler during Profiling builds."
+    FORCE )
+set(CMAKE_EXE_LINKER_FLAGS_PROFILING
+    "-pg" CACHE STRING
+    "Flags used for linking binaries during Profiling builds."
+    FORCE )
+set(CMAKE_SHARED_LINKER_FLAGS_PROFILING
+    "-pg" CACHE STRING
+    "Flags used by the shared libraries linker during Profiling builds."
+    FORCE )
+mark_as_advanced(
+    CMAKE_CXX_FLAGS_PROFILING
+    CMAKE_C_FLAGS_PROFILING
+    CMAKE_EXE_LINKER_FLAGS_PROFILING
+    CMAKE_SHARED_LINKER_FLAGS_PROFILING
+)
+
+# Update the documentation string of CMAKE_BUILD_TYPE for GUIs
+set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
+    "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel Profiling."
+    FORCE )
+    
 
 add_executable(
     ${PROJECT_NAME}

@@ -94,8 +94,6 @@ std::vector<std::span<State>> Simulation::run_parallel_ic(
     Model* h, std::span<State> v_S0) {
     // Runs the simulation for each initial condition in v_S0
 
-    std::reference_wrapper<Model> h_ref = *h;
-
     size_t const& n_ic = v_S0.size();
     size_t n_steps = ceil(time_interval / time_step);
 
@@ -104,16 +102,17 @@ std::vector<std::span<State>> Simulation::run_parallel_ic(
         results.resize(n_ic * (n_steps + 1));
     } catch (std::bad_alloc& ba) {
         std::cerr << "bad_alloc caught: " << ba.what() << '\n';
-        std::cerr << "Trying to allocate " << n_ic * (n_steps + 1)*sizeof(State)/std::pow(10, 9) << " GB\n";
+        std::cerr << "Trying to allocate "
+                  << n_ic * (n_steps + 1) * sizeof(State) / std::pow(10, 9)
+                  << " GB\n";
         std::cerr << "Not enough memory to allocate results vector\n";
         std::cerr << "Try reducing the number of initial conditions\n";
         std::cerr << "or decreasing the time interval\n";
         std::cerr << "or increasing the time step\n";
-    
+
         std::cerr << "or buying more RAM\n";
         std::exit(EXIT_FAILURE);
     }
-
 
     // Create threads
     std::mutex mtx;
@@ -131,10 +130,9 @@ std::vector<std::span<State>> Simulation::run_parallel_ic(
                 State const& S0 = v_S0[j];
                 std::span<State> r_sp = run(
                     h, S0, {results.begin() + j * (n_steps + 1), n_steps + 1});
-                // Lock res_spans for write
-                mtx.lock();
+                // No need to lock res_spans for write
+
                 res_spans[j] = r_sp;
-                mtx.unlock();
             }
         }};
     }
@@ -146,4 +144,3 @@ std::vector<std::span<State>> Simulation::run_parallel_ic(
     }
     return res_spans;
 }
-

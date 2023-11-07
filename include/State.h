@@ -1,7 +1,7 @@
 #pragma once
 
-#include <boost/numeric/odeint.hpp>
-#include <boost/operators.hpp>
+#include <../external/odeint.hpp>
+#include <../external/operators.hpp>
 #include <cmath>
 #include <iostream>
 
