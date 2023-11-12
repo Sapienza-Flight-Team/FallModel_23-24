@@ -13,30 +13,73 @@
 template <size_t N>
 using Real = std::conditional_t<N == 1, double, Eigen::Vector<double, N>>;
 
-
-
-
-
-// N is the dimension of the state vector, sDim is the dimension of the space 
+/**
+ * @brief Multi-dimensional state vector
+ *
+ * @tparam N Dimension of the state vector
+ * @tparam sDim Dimension of the space
+ */
 template <size_t N, size_t sDim>
-class State : public Eigen::Vector<double, 2*N> {
+class State : public Eigen::Vector<double, 2 * N> {
     static_assert(sDim <= N, "sDim must be less than or equal to N");
-    private:
-        double t = 0;
-    public : 
 
-    State() : Eigen::Vector<double, 2*N>() {
+private:
+    double t = 0;
+
+public:
+    State()
+        : Eigen::Vector<double, 2 * N>()
+    {
         this->setZero();
-    }   // default constructor
-    State(const double val) : Eigen::Vector<double, 2*N>() {
+    } // default constructor
+    State(const double val)
+        : Eigen::Vector<double, 2 * N>()
+    {
         this->setConstant(val);
-    }  // constructor with constant value
+    } // constructor with constant value
 
-    Real<sDim> pos() const {
+    // move constructor
+    State(State&& other) noexcept
+        : Eigen::Vector<double, 2 * N>(std::move(other))
+    {
+        t = other.t;
+    }
+
+    // copy constructor
+    State(const State& other)
+        : Eigen::Vector<double, 2 * N>(other)
+    {
+        t = other.t;
+    }
+
+    // operator=
+    State& operator=(const State& other)
+    {
+        if (this != &other) {
+            this->template head<N>() = other.template head<N>();
+            this->template tail<N>() = other.template tail<N>();
+            t = other.t;
+        }
+        return *this;
+    }
+
+    State& operator=(State&& other) noexcept
+    {
+        if (this != &other) {
+            this->template head<N>() = std::move(other.template head<N>());
+            this->template tail<N>() = std::move(other.template tail<N>());
+            t = other.t;
+        }
+        return *this;
+    }
+
+    Real<sDim> pos() const
+    {
         return this->template head<sDim>();
     }
-    Real<sDim> vel() const {
-        return this->template segment<sDim>(N, N+sDim);
+    Real<sDim> vel() const
+    {
+        return this->template segment<sDim>(N, N + sDim);
     }
 };
 
