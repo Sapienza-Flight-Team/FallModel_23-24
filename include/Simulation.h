@@ -1,6 +1,6 @@
 #pragma once
 
-#include <../external/odeint.hpp>
+#include <boost/numeric/odeint.hpp>
 #include <cmath>
 #include <functional>
 #include <memory>
@@ -30,15 +30,16 @@ typedef struct {
  * @brief Class for simulating the model.
  *
  */
+template <size_t N, size_t sDim>
 class Simulation {
    private:
     // Methods parameters
-    std::string method;         /**< Method to be used for simulation. */
-    double time_step;           /**< Time step for simulation. */
-    double time_interval;       /**< Time interval for simulation. */
-    std::vector<State> results; /**< Vector containing the results of the
+    std::string method;            /**< Method to be used for simulation. */
+    double time_step;              /**< Time step for simulation. */
+    double time_interval;          /**< Time interval for simulation. */
+    std::vector<State<N, sDim>> results; /**< Vector containing the results of the
                                      simulation. */
-    std::unique_ptr<BaseStepper> stepper; /**< Pointer to the stepper object. */
+    BaseStepper<N, sDim>* stepper;       /**< Pointer to the stepper object. */
 
    public:
     /**
@@ -52,17 +53,19 @@ class Simulation {
         : method(method), time_step(dt), time_interval(T) {
         if (method == "rk4" || method == "") {
             // Default method
-            stepper = std::make_unique<RK4Stepper>();
-        } else if (method == "rk45") {
-            stepper = std::make_unique<RK45Stepper>();
+            stepper = new RK4Stepper<N, sDim>();
         }
-        // else if (method == "ode113")
-        // {
-        //     /* code */
+        // else if (method == "rk45") {
+        //     stepper = new RK4Stepper();
         // }
-        else if (method == "euler") {
-            stepper = std::make_unique<EulerStepper>();
-        } else {
+        // // else if (method == "ode113")
+        // // {
+        // //     /* code */
+        // // }
+        // else if (method == "euler") {
+        //     stepper = new EulerStepper();
+        // }
+        else {
             throw std::invalid_argument("Invalid method");
         }
     }
@@ -88,10 +91,12 @@ class Simulation {
      * @brief Runs the simulation.
      *
      * @param h Pointer to the Model object.
-     * @param S0 Initial state of the system.
+     * @param S0 Initial State<N, sDim> of the system.
      * @param res_ptr Pointer to the result array.
      */
-    std::span<State> run(Model* h, State S0, std::span<State> res_ptr = {});
+
+    std::span<State<N, sDim>> run(Model<N, sDim>* h, State<N, sDim> S0,
+                            std::span<State<N, sDim>> res_ptr = {});
 
     /**
      * @brief Runs the simulation in parallel for multiple initial conditions.
@@ -99,16 +104,16 @@ class Simulation {
      * @param h Pointer to the Model object.
      * @param v_S0 Vector of initial states of the system.
      */
-    std::vector<std::span<State>> run_parallel_ic(Model* h,
-                                                  std::span<State> v_S0);
+    std::vector<std::span<State<N, sDim>>> run_parallel_ic(Model<N, sDim>* h,
+                                                     std::span<State<N, sDim>> v_S0);
 
-    void own_res(std::vector<State>& v_res) {
+    void own_res(std::vector<State<N, sDim>>& v_res) {
         /**
          * @brief Returns the results of the simulation.
          * Transfers ownership from the private member to the user vector.
          * User should handle runtime_exception if results is empty.
          *
-         * @return std::vector<State> Vector containing the results of the
+         * @return std::vector<State<N, sDim>> Vector containing the results of the
          * simulation.
          *
          */

@@ -3,8 +3,8 @@
 #include <span>
 
 namespace odeint = boost::numeric::odeint;
-
-void Simulation::change_settings(ODESettings settings) {
+template <size_t N>
+void Simulation<N>::change_settings(ODESettings settings) {
     /**
      * @brief Changes the settings of the simulation
      *
@@ -18,9 +18,9 @@ void Simulation::change_settings(ODESettings settings) {
     time_interval = settings.T;
     method = settings.method;
 }
-
-std::span<State> Simulation::run(Model* h, State S0,
-                                 std::span<State> res_span) {
+template <size_t N>
+std::span<State<N>> Simulation<N>::run(Model<N>* h, State<N> S0,
+                                       std::span<State<N>> res_span) {
     /**
      * Runs the dynamical model simulation using the provided Model object and
      * initial state. If a pointer to a State object is provided, the results
@@ -35,9 +35,8 @@ std::span<State> Simulation::run(Model* h, State S0,
      * @note If res_span is given, memory must be managed by the caller
      */
 
-    using rk4 = odeint::runge_kutta4<State, double, State, double,
-                                     odeint::vector_space_algebra>;
-    rk4 stepper;
+    // Create stepper
+    RK4Stepper<N> stepper;
     State S0_step = S0;
     State out;
     std::reference_wrapper<Model> h_ref = *h;
@@ -89,9 +88,9 @@ std::span<State> Simulation::run(Model* h, State S0,
     return res_span;  // If the condition is never met, return the last
                       // state
 }
-
-std::vector<std::span<State>> Simulation::run_parallel_ic(
-    Model* h, std::span<State> v_S0) {
+template <size_t N, size_t sDim>
+std::vector<std::span<State<N, sDim>>> Simulation<N, sDim>::run_parallel_ic(
+    Model<N>* h, std::span<State<N, sDim>> v_S0) {
     // Runs the simulation for each initial condition in v_S0
 
     size_t const& n_ic = v_S0.size();
@@ -115,7 +114,6 @@ std::vector<std::span<State>> Simulation::run_parallel_ic(
     }
 
     // Create threads
-    std::mutex mtx;
 
     std::vector<std::span<State>> res_spans(
         n_ic);  // Reserve space for return spans
@@ -131,7 +129,6 @@ std::vector<std::span<State>> Simulation::run_parallel_ic(
                 std::span<State> r_sp = run(
                     h, S0, {results.begin() + j * (n_steps + 1), n_steps + 1});
                 // No need to lock res_spans for write
-
                 res_spans[j] = r_sp;
             }
         }};

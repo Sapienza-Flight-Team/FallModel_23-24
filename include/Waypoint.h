@@ -36,7 +36,8 @@ GPS translate_gps(const GPS &gps, double d, double head);
  * @param heading The desired heading of the aircraft at the drop point.
  * @return The GPS coordinates of the drop point.
  */
-GPS get_drop(const State S_end, const GPS &gps_target, double heading);
+template <size_t N>
+GPS get_drop(const State<N> S_end, const GPS &gps_target, double heading);
 
 /**
  * Returns a vector of GPS coordinates that are d meters away from the given drop point

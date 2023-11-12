@@ -8,19 +8,26 @@
 #include <fstream>
 #include <iomanip>
 
-
-
-
 #include "../include/pch.h"
 
-double cd_payload(State s, Real3 Vr, double t) { return 0.47; }
-double cd_parachute(State s, Real3 Vr, double t) { return 1.75; }
-double sur_payload(State s, Real3 Vr, double t) { return 0.1257; }
-double sur_parachute(State s, Real3 Vr, double t) { return 0.3491; }
+const size_t dim3 = 3;
+
+double cd_payload(const State<dim3>& s, const Real3& Vr, double t) {
+    return 0.47;
+}
+double cd_parachute(const State<dim3>& s, const Real3& Vr, double t) {
+    return 1.75;
+}
+double sur_payload(const State<dim3>& s, const Real3& Vr, double t) {
+    return 0.1257;
+}
+double sur_parachute(const State<dim3>& s, const Real3& Vr, double t) {
+    return 0.3491;
+}
 constexpr double chute_mass = 0.116;
 constexpr double load_mass = 1.15;
 
-Real3 wind_law(State state, Real3 pos, double t) { return Real3(0, 0, 0); }
+Real3 wind_law(State<dim3> state, Real3 pos, double t) { return Real3(0, 0, 0); }
 
 std::vector<State> createVS0(size_t elements, State S0, double variation) {
     std::vector<State> v_S0;
@@ -86,7 +93,7 @@ int main() {
                          n_ic
                   << "ms\n";
 
-        std::vector<State> res;
+        std::vector<State<3>> res;
         s.own_res(res);
 
         // std::ofstream file("../test/test_auto.csv");
@@ -104,8 +111,7 @@ int main() {
 
         Simulation ps(0.01, 10, "");
         auto start = std::chrono::high_resolution_clock::now();
-        std::vector<std::span<State>> res_span =
-            ps.run_parallel_ic(&bm, vS0);
+        std::vector<std::span<State>> res_span = ps.run_parallel_ic(&bm, vS0);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(stop - start);

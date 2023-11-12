@@ -1,9 +1,10 @@
 #pragma once
 
-#include "Real3.h"
+#include "Real.h"
 #include "State.h"
 
 // Wind is a functor that can be used to compute the velocity of wind.
+template <size_t N>
 class Wind {
 public:
     // Constructs
@@ -17,7 +18,7 @@ public:
         if (this != &w)
             wind_law = w.wind_law;
     }
-    Wind(Real3 (*wind_func)(State s, Real3 x, double))
+    Wind(Real3 (*wind_func)(State<N>& s, Real3& x, double))
         : wind_law(wind_func) {};
     ~Wind() { } // destructor
 
@@ -29,9 +30,9 @@ public:
         return *this;
     }
 
-    Real3 operator()(State s, Real3 position, double t) { return wind_law(s, position, t); };
+    Real3 operator()(State<N>& s, Real3& position, double t) { return wind_law(s, position, t); };
 
 private:
     // This function take position and time, return the wind velocity
-    Real3 (*wind_law)(State s, Real3, double);
+    Real3 (*wind_law)(State<N>& s, Real3&, double);
 };
