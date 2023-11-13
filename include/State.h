@@ -5,7 +5,85 @@
 #include <cmath>
 #include <iostream>
 
-#include "Real.h"
+#include "VReal.h"
+
+/**
+ * @brief Multi-dimensional state vector
+ *
+ * @tparam N Dimension of the state vector
+ * @tparam sDim Dimension of the space
+ */
+template <size_t N, size_t sDim>
+class State : public Eigen::Vector<double, 2 * N> {
+    static_assert(sDim <= N, "sDim must be less than or equal to N");
+
+   private:
+    double t = 0;
+
+   public:
+    State() : Eigen::Vector<double, 2 * N>() {
+        this->setZero();
+    }  // default constructor
+    State(const double val) : Eigen::Vector<double, 2 * N>() {
+        this->setConstant(val);
+    }  // constructor with constant value
+
+    // Constructor with initializer list
+    State(std::initializer_list<double> init_list)
+        : Eigen::Vector<double, 2 * N>() {
+        assert(init_list.size() ==
+               2 * N);  // Ensure the initializer list is the correct size
+        int i = 0;
+        for (double val : init_list) {
+            (*this)[i++] = val;
+        }
+    }
+
+    // move constructor
+    State(State&& other) noexcept
+        : Eigen::Vector<double, 2 * N>(std::move(other)) {
+        t = other.t;
+    }
+
+    // copy constructor
+    State(const State& other) : Eigen::Vector<double, 2 * N>(other) {
+        t = other.t;
+    }
+
+    // operator=
+    State& operator=(const State& other) {
+        if (this != &other) {
+            this->Eigen::Vector<double, 2 * N>::operator=(other);
+            t = other.t;
+        }
+        return *this;
+    }
+
+    State& operator=(State&& other) noexcept {
+        if (this != &other) {
+            this->Eigen::Vector<double, 2 * N>::operator=(std::move(other));
+            t = other.t;
+        }
+        return *this;
+    }
+
+    // Write all the operators (+=, -=, *=, /=) for State
+    State& operator+(const State& other) {
+        State result = *this;
+        result += other;
+        return result;
+    }
+    State& operator+=(const State& other) {
+        this->Eigen::Vector<double, 2 * N>::operator+=(other);
+        return *this;
+    }
+
+    ~State() {}
+    VReal<sDim> pos() const { return this->template head<sDim>(); }
+    VReal<sDim> vel() const {
+        return this->template segment<sDim>(N, N + sDim);
+    }
+};
 
 // //[State - Makes State digestible by odeInt
 // class State
@@ -32,7 +110,7 @@
 //           const double _vy, const double _vz)
 //         : x(_x), y(_y), z(_z), vx(_vx), vy(_vy), vz(_vz) {}
 
-//     State(Real3 pos, Real3 vel)
+//     State(VReal3 pos, VReal3 vel)
 //         : x(pos.x), y(pos.y), z(pos.z), vx(vel.x), vy(vel.y), vz(vel.z){};
 
 //     State &operator+=(const State &other) {
@@ -57,8 +135,8 @@
 //                      std::abs(vy), std::abs(vz));
 //     }
 
-//     Real3 pos() const { return Real3(x, y, z); }
-//     Real3 vel() const { return Real3(vx, vy, vz); }
+//     VReal3 pos() const { return VReal3(x, y, z); }
+//     VReal3 vel() const { return VReal3(vx, vy, vz); }
 
 //     friend std::ostream &operator<<(std::ostream &out, const State &p) {
 //         out << p.x << "," << p.y << "," << p.z << "," << p.vx << "," << p.vy

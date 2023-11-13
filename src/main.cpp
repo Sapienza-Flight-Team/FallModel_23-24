@@ -12,51 +12,52 @@
 
 const size_t dim3 = 3;
 
-double cd_payload(const State<dim3>& s, const Real3& Vr, double t) {
+double cd_payload(const State<dim3, dim3>& s, const VReal<dim3>& Vr, double t) {
     return 0.47;
 }
-double cd_parachute(const State<dim3>& s, const Real3& Vr, double t) {
+double cd_parachute(const State<dim3, dim3>& s, const VReal<dim3>& Vr,
+                    double t) {
     return 1.75;
 }
-double sur_payload(const State<dim3>& s, const Real3& Vr, double t) {
+double sur_payload(const State<dim3, dim3>& s, const VReal<dim3>& Vr,
+                   double t) {
     return 0.1257;
 }
-double sur_parachute(const State<dim3>& s, const Real3& Vr, double t) {
+double sur_parachute(const State<dim3, dim3>& s, const VReal<dim3>& Vr,
+                     double t) {
     return 0.3491;
 }
 constexpr double chute_mass = 0.116;
 constexpr double load_mass = 1.15;
 
-Real3 wind_law(State<dim3> state, Real3 pos, double t) { return Real3(0, 0, 0); }
+VReal<dim3> wind_law(State<dim3, dim3> state, VReal<dim3> pos, double t) {
+    return VReal<dim3>(0, 0, 0);
+}
 
-std::vector<State> createVS0(size_t elements, State S0, double variation) {
-    std::vector<State> v_S0;
+std::vector<State<dim3, dim3>> createVS0(size_t elements, State<dim3, dim3> S0,
+                                         double variation) {
+    std::vector<State<dim3, dim3>> v_S0;
     v_S0.reserve(elements);
     for (size_t i = 0; i < elements; i++) {
-        State S;
+        State<dim3, dim3> S;
         if (i % 2 == 0) {
-            S = {S0.pos().x,
-                 S0.pos().y,
-                 S0.pos().z,
-                 S0.vel().x + i * variation,
-                 S0.vel().y + i * variation,
-                 S0.vel().z + i * variation};
+            S = S0 + State<dim3, dim3>{
+                         0, 0, 0, i * variation, i * variation, i * variation};
         } else {
-            S = {S0.pos().x,
-                 S0.pos().y,
-                 S0.pos().z,
-                 S0.vel().x - i * variation,
-                 S0.vel().y - i * variation,
-                 S0.vel().z - i * variation};
+            S = {S0.pos().x(),
+                 S0.pos().y(),
+                 S0.pos().z(),
+                 S0.vel().x() - i * variation,
+                 S0.vel().y() - i * variation,
+                 S0.vel().z() - i * variation};
         }
         v_S0.push_back(S);
     }
     return v_S0;
 }
 
-ConFun f_stop = [](State S0, State S0_dot, double t) {
-    return S0_dot.pos().z > 0;
-};
+ConFun<dim3, dim3> f_stop = [](State<dim3, dim3> S0, State<dim3, dim3> S0_dot,
+                               double t) { return S0_dot.pos().z() > 0; };
 
 std::string fPath = {"../test/"};
 std::string pPath = {"../test/para/"};
@@ -65,11 +66,11 @@ using namespace std::filesystem;
 path p = path("../test/para/");
 
 int main() {
-    PayChute pc(cd_payload, sur_payload, load_mass, cd_parachute, sur_parachute,
-                chute_mass);
-    Wind Vw(wind_law);
-    BallisticModel bm(pc, Vw, f_stop);
-    State S0(0, 0, -40, 22, 0, 0);
+    PayChute<dim3, dim3> pc(cd_payload, sur_payload, load_mass, cd_parachute,
+                            sur_parachute, chute_mass);
+    Wind<dim3> Vw(wind_law);
+    BallisticModel<dim3, dim3> bm(pc, Vw, f_stop);
+    State<dim3, dim3> S0(0, 0, -40, 22, 0, 0);
 
     {
         size_t n_ic = 10000;  // 10k ic
@@ -77,7 +78,7 @@ int main() {
 
         std::cout << "--- Serial code --- n_iterations: " << n_ic << "\n";
 
-        Simulation s(0.01, 10, "rk4");
+        Simulation<dim3, dim3> s(0.01, 10, "rk4");
         auto start = std::chrono::high_resolution_clock::now();
         for (size_t i = 0; i < n_ic; i++) {
             s.run(&bm, vS0[i]);
@@ -93,7 +94,7 @@ int main() {
                          n_ic
                   << "ms\n";
 
-        std::vector<State<3>> res;
+        std::vector<State<dim3, dim3>> res;
         s.own_res(res);
 
         // std::ofstream file("../test/test_auto.csv");
@@ -109,9 +110,10 @@ int main() {
         std::cout << "--- Parallel propagation --- n_iterations: " << n_ic
                   << "\n";
 
-        Simulation ps(0.01, 10, "");
+        Simulation<dim3, dim3> ps(0.01, 10, "");
         auto start = std::chrono::high_resolution_clock::now();
-        std::vector<std::span<State>> res_span = ps.run_parallel_ic(&bm, vS0);
+        std::vector<std::span<State<dim3, dim3>>> res_span =
+            ps.run_parallel_ic(&bm, vS0);
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =
             std::chrono::duration_cast<std::chrono::seconds>(stop - start);

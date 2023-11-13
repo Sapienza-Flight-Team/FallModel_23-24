@@ -58,22 +58,22 @@ GPS translate_gps(const GPS &gps, double d, double head) {
     return gps_new;
 }
 
-
 /**
- * Calculates the GPS coordinates of a drop point given the current state, target GPS coordinates and heading.
+ * Calculates the GPS coordinates of a drop point given the current state,
+ * target GPS coordinates and heading.
  * @param S_end The last state of the payload simulation.
  * @param gps_target The ground target GPS coordinates.
  * @param heading The heading of the aircraft in degrees.
  * @return The GPS coordinates of the drop point.
  */
-template <size_t N>
-GPS get_drop(State<N> S_end, const GPS &gps_target, double heading) {
-    
+template <size_t N, size_t sDim>
+GPS get_drop(State<N, sDim> S_end, const GPS &gps_target, double heading) {
     GPS gps_drop;
     double R_E = 6378100;                    // Earth radius (m)
     double head_rad = heading * M_PI / 180;  // Convert heading to rad
 
-    Real3 pos = S_end.pos(); // Come prendo la posizione? Devo conoscere il numero di parametri spaziali
+    VReal3 pos = S_end.pos();  // Come prendo la posizione? Devo conoscere il
+                               // numero di parametri spaziali
     double x_dist = pos.x;
     double y_dist = pos.y;
     double d = sqrt(pow(x_dist, 2) + pow(y_dist, 2));
@@ -97,26 +97,25 @@ GPS get_drop(State<N> S_end, const GPS &gps_target, double heading) {
     return gps_drop;
 }
 
-
 /**
- * Calculates a vector of three GPS coordinates that form a straight line at a given distance and heading from a starting GPS coordinate.
+ * Calculates a vector of three GPS coordinates that form a straight line at a
+ * given distance and heading from a starting GPS coordinate.
  * @param drop The in-air drop GPS coordinate.
  * @param heading The heading in degrees from the starting GPS coordinate.
  * @param d The distance in meters from the starting GPS coordinate.
- * @return A vector of three GPS coordinates forming a straight line at the given distance and heading from the starting GPS coordinate.
+ * @return A vector of three GPS coordinates forming a straight line at the
+ * given distance and heading from the starting GPS coordinate.
  * @throws std::invalid_argument if d is equal to 0.
  */
 std::vector<GPS> way_array(const GPS &drop, double heading, double d) {
-    // translate with a distance d a waypoint with heading head and coordinate in
-    // gps system return a vector of 3 gps coordinates
+    // translate with a distance d a waypoint with heading head and coordinate
+    // in gps system return a vector of 3 gps coordinates
     if (d != 0) {
-
         GPS first = translate_gps(drop, -d, heading);
         GPS mid = drop;
         GPS last = translate_gps(drop, d, heading);
         return std::vector<GPS>{first, mid, last};
-    }
-    else {
+    } else {
         throw std::invalid_argument("d must be different from 0");
     }
 }

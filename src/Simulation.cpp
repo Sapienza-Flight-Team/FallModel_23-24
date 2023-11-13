@@ -3,8 +3,9 @@
 #include <span>
 
 namespace odeint = boost::numeric::odeint;
-template <size_t N>
-void Simulation<N>::change_settings(ODESettings settings) {
+
+template <size_t N, size_t sDim>
+void Simulation<N, sDim>::change_settings(ODESettings settings) {
     /**
      * @brief Changes the settings of the simulation
      *
@@ -18,9 +19,10 @@ void Simulation<N>::change_settings(ODESettings settings) {
     time_interval = settings.T;
     method = settings.method;
 }
-template <size_t N>
-std::span<State<N>> Simulation<N>::run(Model<N>* h, State<N> S0,
-                                       std::span<State<N>> res_span) {
+
+template <size_t N, size_t sDim>
+std::span<State<N, sDim>> Simulation<N, sDim>::run(Model<N, sDim>* h, State<N, sDim> S0,
+                                       std::span<State<N, sDim>> res_span) {
     /**
      * Runs the dynamical model simulation using the provided Model object and
      * initial state. If a pointer to a State object is provided, the results
@@ -36,10 +38,10 @@ std::span<State<N>> Simulation<N>::run(Model<N>* h, State<N> S0,
      */
 
     // Create stepper
-    RK4Stepper<N> stepper;
-    State S0_step = S0;
-    State out;
-    std::reference_wrapper<Model> h_ref = *h;
+    RK4Stepper<N, sDim> stepper;
+    State<N, sDim> S0_step = S0;
+    State<N, sDim> out;
+    std::reference_wrapper<Model<N, sDim>> h_ref = *h;
 
     int n_steps = ceil(time_interval / time_step);
 
@@ -88,9 +90,10 @@ std::span<State<N>> Simulation<N>::run(Model<N>* h, State<N> S0,
     return res_span;  // If the condition is never met, return the last
                       // state
 }
+
 template <size_t N, size_t sDim>
 std::vector<std::span<State<N, sDim>>> Simulation<N, sDim>::run_parallel_ic(
-    Model<N>* h, std::span<State<N, sDim>> v_S0) {
+    Model<N, sDim>* h, std::span<State<N, sDim>> v_S0) {
     // Runs the simulation for each initial condition in v_S0
 
     size_t const& n_ic = v_S0.size();
@@ -102,7 +105,7 @@ std::vector<std::span<State<N, sDim>>> Simulation<N, sDim>::run_parallel_ic(
     } catch (std::bad_alloc& ba) {
         std::cerr << "bad_alloc caught: " << ba.what() << '\n';
         std::cerr << "Trying to allocate "
-                  << n_ic * (n_steps + 1) * sizeof(State) / std::pow(10, 9)
+                  << n_ic * (n_steps + 1) * sizeof(State<N, sDim>) / std::pow(10, 9)
                   << " GB\n";
         std::cerr << "Not enough memory to allocate results vector\n";
         std::cerr << "Try reducing the number of initial conditions\n";
@@ -115,7 +118,7 @@ std::vector<std::span<State<N, sDim>>> Simulation<N, sDim>::run_parallel_ic(
 
     // Create threads
 
-    std::vector<std::span<State>> res_spans(
+    std::vector<std::span<State<N, sDim>>> res_spans(
         n_ic);  // Reserve space for return spans
 
     std::vector<std::thread> threads(N_THREADS);  // Reserve space for threads
@@ -125,8 +128,8 @@ std::vector<std::span<State<N, sDim>>> Simulation<N, sDim>::run_parallel_ic(
             size_t thread_id{i};
 
             for (auto j = thread_id; j < n_ic; j += N_THREADS) {
-                State const& S0 = v_S0[j];
-                std::span<State> r_sp = run(
+                State<N, sDim> const& S0 = v_S0[j];
+                std::span<State<N, sDim>> r_sp = run(
                     h, S0, {results.begin() + j * (n_steps + 1), n_steps + 1});
                 // No need to lock res_spans for write
                 res_spans[j] = r_sp;

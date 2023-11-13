@@ -37,7 +37,7 @@ CHECK:
 
 
 OBJECTS:
-    Real3:
+    VReal3:
         Implement a vector in R3
     Wind:
         Implement the wind in model

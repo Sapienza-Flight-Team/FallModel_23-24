@@ -24,7 +24,7 @@ set(SFT_HEADERS
     ${INC_DIR}/Model.h
     ${INC_DIR}/BallisticModel.h
     ${INC_DIR}/PayChute.h
-    ${INC_DIR}/Real3.h
+    ${INC_DIR}/VReal.h
     ${INC_DIR}/Settings.h
     ${INC_DIR}/Simulation.h
     ${INC_DIR}/State.h
