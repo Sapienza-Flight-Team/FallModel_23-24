@@ -14,6 +14,7 @@
  * @tparam sDim Dimension of the space
  */
 template <size_t N, size_t sDim>
+
 class State : public Eigen::Vector<double, 2 * N> {
     static_assert(sDim <= N, "sDim must be less than or equal to N");
 
@@ -21,13 +22,15 @@ class State : public Eigen::Vector<double, 2 * N> {
     double t = 0;
 
    public:
-    State() : Eigen::Vector<double, 2 * N>() {
-        this->setZero();
-    }  // default constructor
+    /////////////////////// Constructors ///////////////////////
+    ///                                                      ///
+
+    // default constructor
+    State() : Eigen::Vector<double, 2 * N>() { this->setZero(); }
+    // constructor with constant value
     State(const double val) : Eigen::Vector<double, 2 * N>() {
         this->setConstant(val);
-    }  // constructor with constant value
-
+    }
     // Constructor with initializer list
     State(std::initializer_list<double> init_list)
         : Eigen::Vector<double, 2 * N>() {
@@ -38,17 +41,29 @@ class State : public Eigen::Vector<double, 2 * N> {
             (*this)[i++] = val;
         }
     }
+    // Constructor with VReal of 2N elements
+    State(const Eigen::Vector<double, 2 * N>& vec)
+        : Eigen::Vector<double, 2 * N>(vec) {}
+
+    // Constructor with 2 VReal of N rows
+    State(VReal<N> head, VReal<N> tail) {
+        this->template head<N>() = head;
+        this->template tail<N>() = tail;
+    }
 
     // move constructor
     State(State&& other) noexcept
         : Eigen::Vector<double, 2 * N>(std::move(other)) {
         t = other.t;
     }
-
     // copy constructor
-    State(const State& other) : Eigen::Vector<double, 2 * N>(other) {
-        t = other.t;
-    }
+    State(const State& other)
+        : Eigen::Vector<double, 2 * N>(other), t(other.t) {}
+    ///                                                       ///
+    ////////////////////////////////////////////////////////////
+
+    /////////////////////////// Operators ///////////////////////////
+    ///                                                           ///
 
     // operator=
     State& operator=(const State& other) {
@@ -58,7 +73,7 @@ class State : public Eigen::Vector<double, 2 * N> {
         }
         return *this;
     }
-
+    // move operator=
     State& operator=(State&& other) noexcept {
         if (this != &other) {
             this->Eigen::Vector<double, 2 * N>::operator=(std::move(other));
@@ -66,26 +81,69 @@ class State : public Eigen::Vector<double, 2 * N> {
         }
         return *this;
     }
+    // Copy with Eigen::Matrix
+    State& operator=(
+        const Eigen::Matrix<double, 2 * N, 1, 0, 2 * N, 1>& other) {
+        Eigen::Vector<double, 2 * N>::operator=(other);
+        return *this;
+    }
 
-    // Write all the operators (+=, -=, *=, /=) for State
-    State& operator+(const State& other) {
-        State result = *this;
-        result += other;
-        return result;
+    //// Operators (+=, -=, *=, /=) for State (scalar) and State (vector)
+    ////
+
+    // Vectorial
+    State operator+(const State& other) {
+        return State(this->Eigen::Vector<double, 2 * N>::operator+(other));
     }
     State& operator+=(const State& other) {
         this->Eigen::Vector<double, 2 * N>::operator+=(other);
         return *this;
     }
-
-    ~State() {}
-    VReal<sDim> pos() const { return this->template head<sDim>(); }
-    VReal<sDim> vel() const {
-        return this->template segment<sDim>(N, N + sDim);
+    State& operator-(const State& other) {
+        return State(this->Eigen::Vector<double, 2 * N>::operator-(other));
     }
+    State& operator-=(const State& other) {
+        this->Eigen::Vector<double, 2 * N>::operator-=(other);
+        return *this;
+    }
+
+    // Scalar
+    State& operator*(const double scalar) {
+        return State(this->Eigen::Vector<double, 2 * N>::operator*(scalar));
+    }
+    State& operator*=(const double scalar) {
+        this->Eigen::Vector<double, 2 * N>::operator*=(scalar);
+        return *this;
+    }
+
+    State& operator/(const double scalar) {
+        return State(this->Eigen::Vector<double, 2 * N>::operator/(scalar));
+    }
+    State& operator/=(const double scalar) {
+        this->Eigen::Vector<double, 2 * N>::operator/=(scalar);
+        return *this;
+    }
+    // Vector product
+    State& operator*(const State& other) {
+        return State(this->Eigen::Vector<double, 2 * N>::operator*(other));
+    }
+    State& operator*=(const State& other) {
+        this->Eigen::Vector<double, 2 * N>::operator*=(other);
+        return *this;
+    }
+    ///                                                            ///
+    //////////////////////////////////////////////////////////////////
+
+    /////////////////////////// Methods ///////////////////////////
+
+    VReal<N> first() { return this->template head<N>(); }
+    VReal<N> last() { return this->template tail<N>(); }
+
+    VReal<sDim> pos() { return this->template head<sDim>(); }
+    VReal<sDim> vel() { return this->template segment<sDim>(N, N + sDim); }
 };
 
-// //[State - Makes State digestible by odeInt
+//[State - Makes State digestible by odeInt
 // class State
 //     : boost::additive1<
 //           State, boost::additive2<State, double,

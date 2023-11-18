@@ -30,7 +30,7 @@ double sur_parachute(const State<dim3, dim3>& s, const VReal<dim3>& Vr,
 constexpr double chute_mass = 0.116;
 constexpr double load_mass = 1.15;
 
-VReal<dim3> wind_law(State<dim3, dim3> state, VReal<dim3> pos, double t) {
+VReal<dim3> wind_law(State<dim3, dim3>& state, VReal<dim3>& pos, double t) {
     return VReal<dim3>(0, 0, 0);
 }
 
@@ -44,12 +44,8 @@ std::vector<State<dim3, dim3>> createVS0(size_t elements, State<dim3, dim3> S0,
             S = S0 + State<dim3, dim3>{
                          0, 0, 0, i * variation, i * variation, i * variation};
         } else {
-            S = {S0.pos().x(),
-                 S0.pos().y(),
-                 S0.pos().z(),
-                 S0.vel().x() - i * variation,
-                 S0.vel().y() - i * variation,
-                 S0.vel().z() - i * variation};
+            S = S0 + State<dim3, dim3>{
+                         0, 0, 0, i * variation, i * variation, i * variation};
         }
         v_S0.push_back(S);
     }
@@ -57,7 +53,7 @@ std::vector<State<dim3, dim3>> createVS0(size_t elements, State<dim3, dim3> S0,
 }
 
 ConFun<dim3, dim3> f_stop = [](State<dim3, dim3> S0, State<dim3, dim3> S0_dot,
-                               double t) { return S0_dot.pos().z() > 0; };
+                               double t) { return S0_dot.pos()[2] > 0; };
 
 std::string fPath = {"../test/"};
 std::string pPath = {"../test/para/"};
@@ -68,9 +64,9 @@ path p = path("../test/para/");
 int main() {
     PayChute<dim3, dim3> pc(cd_payload, sur_payload, load_mass, cd_parachute,
                             sur_parachute, chute_mass);
-    Wind<dim3> Vw(wind_law);
+    Wind<dim3, dim3> Vw(wind_law);
     BallisticModel<dim3, dim3> bm(pc, Vw, f_stop);
-    State<dim3, dim3> S0(0, 0, -40, 22, 0, 0);
+    State<dim3, dim3> S0 = {0, 0, -40, 22, 0, 0};
 
     {
         size_t n_ic = 10000;  // 10k ic

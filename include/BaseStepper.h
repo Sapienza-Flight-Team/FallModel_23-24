@@ -10,8 +10,9 @@ class BaseStepper {
    public:
     BaseStepper() {}
     virtual ~BaseStepper() {}  // Virtual destructor
-    virtual void do_step(std::reference_wrapper<Model<N, sDim>> model, State<N, sDim>& in,
-                         double t, State<N, sDim>& out, double dt) = 0;
+    virtual void do_step(std::reference_wrapper<Model<N, sDim>> model,
+                         State<N, sDim>& in, double t, State<N, sDim>& out,
+                         double dt) = 0;
 };
 
 template <size_t N, size_t sDim>
@@ -21,8 +22,9 @@ class RK4Stepper : public BaseStepper<N, sDim> {
     RK4Stepper() {}
     ~RK4Stepper() {}
 
-    void do_step(std::reference_wrapper<Model<N, sDim>> model, State<N, sDim>& in, double t,
-                 State<N, sDim>& out, double dt) override {
+    void do_step(std::reference_wrapper<Model<N, sDim>> model,
+                 State<N, sDim>& in, double t, State<N, sDim>& out,
+                 double dt) override {
         stepper.do_step(model, in, t, out, dt);
     }
 

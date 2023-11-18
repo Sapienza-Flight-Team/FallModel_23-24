@@ -87,3 +87,11 @@ target_include_directories(
     PRIVATE
     ${INC_DIR}
 )
+
+# embed STL in executable
+target_link_options(
+    ${PROJECT_NAME}
+    PRIVATE
+    -static-libgcc
+    -static-libstdc++
+)

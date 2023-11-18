@@ -17,8 +17,8 @@ public:
         if (this != &w)
             wind_law = w.wind_law;
     }
-    Wind(VReal3 (*wind_func)(State<N, sDim>& s, VReal3& x, double))
-        : wind_law(wind_func) {};
+    Wind(VReal<sDim> (*wind_func)(State<N, sDim> & s, VReal<sDim>& x, double))
+        : wind_law(wind_func){};
     ~Wind() { } // Destructor
 
     // Operators
