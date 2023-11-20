@@ -61,7 +61,10 @@ class State : public Eigen::Vector<double, 2 * N> {
 
     /////////////////////////// Operators ///////////////////////////
     ///                                                           ///
-
+    State& operator()(const double _t) {
+        t = _t;
+        return *this;
+    }
     // operator=
     State& operator=(const State& other) {
         if (this != &other) {
@@ -133,8 +136,8 @@ class State : public Eigen::Vector<double, 2 * N> {
 
     /////////////////////////// Methods ///////////////////////////
 
-    VReal<N> X() { return this->template head<N>(); }
-    VReal<N> X_dot() { return this->template tail<N>(); }
+    VReal<N> X() const { return this->template head<N>(); }
+    VReal<N> X_dot() const { return this->template tail<N>(); }
 };
 
 //[State - Makes State digestible by odeInt

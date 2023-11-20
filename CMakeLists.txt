@@ -13,8 +13,7 @@ set(SRC_DIR
 )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 set(SFT_SOURCES
-    ${SRC_DIR}/BallisticModel.cpp
-    ${SRC_DIR}/Simulation.cpp
+   
     ${SRC_DIR}/Waypoint.cpp
     ${SRC_DIR}/main.cpp
 )
