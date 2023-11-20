@@ -26,7 +26,7 @@ DMS gps2dms(const GPS &gps);
  * @param heading The heading of the aircraft in degrees.
  * @return The GPS coordinates of the drop point.
  */
-GPS translate_gps(const GPS &gps, double d, double head);
+GPS translate_gps(const GPS &gps, double d, double head, bool rad = true);
 
 /**
  * Calculates the GPS coordinates of a drop point given the final state of the aircraft, the GPS coordinates of the target, and the desired heading.
