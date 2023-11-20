@@ -70,5 +70,6 @@
         "codecvt": "cpp",
         "map": "cpp",
         "set": "cpp"
-    }
+    },
+    "C_Cpp.default.compilerPath": "/usr/sbin/g++"
 }

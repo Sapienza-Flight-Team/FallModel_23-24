@@ -30,16 +30,16 @@ typedef struct {
  * @brief Class for simulating the model.
  *
  */
-template <size_t N, size_t sDim>
+template <size_t N>
 class Simulation {
    private:
     // Methods parameters
     std::string method;            /**< Method to be used for simulation. */
     double time_step;              /**< Time step for simulation. */
     double time_interval;          /**< Time interval for simulation. */
-    std::vector<State<N, sDim>> results; /**< Vector containing the results of the
+    std::vector<State<N>> results; /**< Vector containing the results of the
                                      simulation. */
-    BaseStepper<N, sDim>* stepper;       /**< Pointer to the stepper object. */
+    BaseStepper<N>* stepper;       /**< Pointer to the stepper object. */
 
    public:
     /**
@@ -53,7 +53,7 @@ class Simulation {
         : method(method), time_step(dt), time_interval(T) {
         if (method == "rk4" || method == "") {
             // Default method
-            stepper = new RK4Stepper<N, sDim>();
+            stepper = new RK4Stepper<N>();
         }
         // else if (method == "rk45") {
         //     stepper = new RK4Stepper();
@@ -91,12 +91,12 @@ class Simulation {
      * @brief Runs the simulation.
      *
      * @param h Pointer to the Model object.
-     * @param S0 Initial State<N, sDim> of the system.
+     * @param S0 Initial State<N> of the system.
      * @param res_ptr Pointer to the result array.
      */
 
-    std::span<State<N, sDim>> run(Model<N, sDim>* h, State<N, sDim> S0,
-                            std::span<State<N, sDim>> res_ptr = {});
+    std::span<State<N>> run(Model<N>* h, State<N> S0,
+                            std::span<State<N>> res_ptr = {});
 
     /**
      * @brief Runs the simulation in parallel for multiple initial conditions.
@@ -104,16 +104,16 @@ class Simulation {
      * @param h Pointer to the Model object.
      * @param v_S0 Vector of initial states of the system.
      */
-    std::vector<std::span<State<N, sDim>>> run_parallel_ic(Model<N, sDim>* h,
-                                                     std::span<State<N, sDim>> v_S0);
+    std::vector<std::span<State<N>>> run_parallel_ic(Model<N>* h,
+                                                     std::span<State<N>> v_S0);
 
-    void own_res(std::vector<State<N, sDim>>& v_res) {
+    void own_res(std::vector<State<N>>& v_res) {
         /**
          * @brief Returns the results of the simulation.
          * Transfers ownership from the private member to the user vector.
          * User should handle runtime_exception if results is empty.
          *
-         * @return std::vector<State<N, sDim>> Vector containing the results of the
+         * @return std::vector<State<N>> Vector containing the results of the
          * simulation.
          *
          */

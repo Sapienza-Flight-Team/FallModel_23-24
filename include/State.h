@@ -11,13 +11,10 @@
  * @brief Multi-dimensional state vector
  *
  * @tparam N Dimension of the state vector
- * @tparam sDim Dimension of the space
  */
-template <size_t N, size_t sDim>
+template <size_t N>
 
 class State : public Eigen::Vector<double, 2 * N> {
-    static_assert(sDim <= N, "sDim must be less than or equal to N");
-
    private:
     double t = 0;
 
@@ -99,7 +96,7 @@ class State : public Eigen::Vector<double, 2 * N> {
         this->Eigen::Vector<double, 2 * N>::operator+=(other);
         return *this;
     }
-    State& operator-(const State& other) {
+    State operator-(const State& other) {
         return State(this->Eigen::Vector<double, 2 * N>::operator-(other));
     }
     State& operator-=(const State& other) {
@@ -108,7 +105,7 @@ class State : public Eigen::Vector<double, 2 * N> {
     }
 
     // Scalar
-    State& operator*(const double scalar) {
+    State operator*(const double scalar) {
         return State(this->Eigen::Vector<double, 2 * N>::operator*(scalar));
     }
     State& operator*=(const double scalar) {
@@ -116,7 +113,7 @@ class State : public Eigen::Vector<double, 2 * N> {
         return *this;
     }
 
-    State& operator/(const double scalar) {
+    State operator/(const double scalar) {
         return State(this->Eigen::Vector<double, 2 * N>::operator/(scalar));
     }
     State& operator/=(const double scalar) {
@@ -124,7 +121,7 @@ class State : public Eigen::Vector<double, 2 * N> {
         return *this;
     }
     // Vector product
-    State& operator*(const State& other) {
+    State operator*(const State& other) {
         return State(this->Eigen::Vector<double, 2 * N>::operator*(other));
     }
     State& operator*=(const State& other) {
@@ -136,11 +133,8 @@ class State : public Eigen::Vector<double, 2 * N> {
 
     /////////////////////////// Methods ///////////////////////////
 
-    VReal<N> first() { return this->template head<N>(); }
-    VReal<N> last() { return this->template tail<N>(); }
-
-    VReal<sDim> pos() { return this->template head<sDim>(); }
-    VReal<sDim> vel() { return this->template segment<sDim>(N, N + sDim); }
+    VReal<N> X() { return this->template head<N>(); }
+    VReal<N> X_dot() { return this->template tail<N>(); }
 };
 
 //[State - Makes State digestible by odeInt

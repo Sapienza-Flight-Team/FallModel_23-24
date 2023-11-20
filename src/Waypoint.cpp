@@ -66,8 +66,8 @@ GPS translate_gps(const GPS &gps, double d, double head) {
  * @param heading The heading of the aircraft in degrees.
  * @return The GPS coordinates of the drop point.
  */
-template <size_t N, size_t sDim>
-GPS get_drop(State<N, sDim> S_end, const GPS &gps_target, double heading) {
+template <size_t N>
+GPS get_drop(State<N> S_end, const GPS &gps_target, double heading) {
     GPS gps_drop;
     double R_E = 6378100;                    // Earth radius (m)
     double head_rad = heading * M_PI / 180;  // Convert heading to rad

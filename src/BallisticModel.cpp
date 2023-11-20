@@ -21,9 +21,9 @@ static double atm(double z) {
         return rho0 * exp(std::pow(10, -4) * z);
     }
 }
-template <size_t N, size_t sDim>
-void BallisticModel<N, sDim>::operator()(const State<N, sDim>& state,
-                                         State<N, sDim>& state_dot, double t) {
+template <size_t N>
+void BallisticModel<N>::operator()(const State<N>& state,
+                                   State<N>& state_dot, double t) {
     VReal3 pos = state.pos();
     VReal3 vel = state.vel();
     VReal3 wind_vel = Vw(state, pos, t);
@@ -47,13 +47,13 @@ void BallisticModel<N, sDim>::operator()(const State<N, sDim>& state,
  * @return The initial state of the object.
  */
 
-template <size_t N, size_t sDim>
-State<N, sDim> get_ic_from_comms(double z, double vmod, double heading) {
+template <size_t N>
+State<N> get_ic_from_comms(double z, double vmod, double heading) {
     // Convert heading from degrees to radians
     heading = heading * M_PI / 180;
     double vx = vmod * cos(heading);
     double vy = vmod * sin(heading);
     double vz = 0;  // We are assuming that drone doesnt climb during drop
 
-    return State<N,sDim>{0,0,-z,vx,vy,vz};
+    return State<N>{0,0,-z,vx,vy,vz};
 }

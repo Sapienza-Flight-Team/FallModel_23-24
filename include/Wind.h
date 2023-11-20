@@ -4,7 +4,7 @@
 #include "State.h"
 
 // Wind is a functor that can be used to compute the velocity of wind.
-template <size_t N, size_t sDim>
+template <size_t N>
 class Wind {
 public:
     // Constructors
@@ -17,7 +17,7 @@ public:
         if (this != &w)
             wind_law = w.wind_law;
     }
-    Wind(VReal<sDim> (*wind_func)(State<N, sDim> & s, VReal<sDim>& x, double))
+    Wind(VReal3 (*wind_func)(State<N>& s, VReal3& x, double))
         : wind_law(wind_func){};
     ~Wind() { } // Destructor
 
@@ -29,9 +29,9 @@ public:
         return *this;
     }
 
-    VReal3 operator()(State<N, sDim>& s, VReal3& position, double t) { return wind_law(s, position, t); };
+    VReal3 operator()(State<N>& s, VReal3& position, double t) { return wind_law(s, position, t); };
 
 private:
     // This function takes position and time, and returns the wind velocity
-    VReal3 (*wind_law)(State<N, sDim>& s, VReal3&, double);
+    VReal3 (*wind_law)(State<N>& s, VReal3&, double);
 };

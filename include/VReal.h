@@ -14,7 +14,6 @@ template <size_t N>
 using VReal = Eigen::Vector<double, N>;
 using VReal3 = VReal<3>;
 
- 
 // //[VReal3 - Makes VReal3 digestible by odeInt
 // class VReal3 {
 //    public:
