@@ -15,16 +15,11 @@ const size_t dim3 = 3;
 double cd_payload(const State<dim3>& s, const VReal<dim3>& Vr, double t) {
     return 0.47;
 }
-double cd_parachute(const State<dim3>& s, const VReal<dim3>& Vr, double t) {
-    return 1.75;
-}
+
 double sur_payload(const State<dim3>& s, const VReal<dim3>& Vr, double t) {
     return 0.1257;
 }
-double sur_parachute(const State<dim3>& s, const VReal<dim3>& Vr, double t) {
-    return 0.3491;
-}
-constexpr double chute_mass = 0.116;
+
 constexpr double load_mass = 1.15;
 
 VReal3 wind_law(const State<dim3>& state, const VReal<dim3>& pos, double t) {
@@ -49,10 +44,6 @@ std::vector<State<dim3>> createVS0(size_t elements, State<dim3> S0,
     return v_S0;
 }
 
-ConFun<dim3> f_stop = [](State<dim3> S0, State<dim3> S0_dot, double t) {
-    return S0_dot.X()[2] > 0;
-};
-
 std::string fPath = {"../test/"};
 std::string pPath = {"../test/para/"};
 
@@ -60,10 +51,9 @@ using namespace std::filesystem;
 path p = path("../test/para/");
 
 int main() {
-    PayChute<dim3> pc(cd_payload, sur_payload, load_mass, cd_parachute,
-                      sur_parachute, chute_mass);
+    PayChute<dim3> pc(cd_payload, sur_payload, load_mass);
     Wind<dim3> Vw(wind_law);
-    BallisticModel<dim3> bm(pc, Vw, f_stop);
+    BallisticModel bm(pc, Vw);
     State<dim3> S0 = {0, 0, -40, 22, 0, 0};
 
     {
@@ -91,10 +81,10 @@ int main() {
         std::vector<State<dim3>> res;
         s.own_res(res);
 
-        // std::ofstream file("../test/test_auto.csv");
-        // for (size_t i = 0; i < res.size(); i++) {
-        //     file << res[i] << "\n";
-        // }
+        std::ofstream file("../test/test_auto.csv");
+        for (size_t i = 0; i < res.size(); i++) {
+            file << res[i] << "\n";
+        }
         std::cout << "--- End of serial code --- \n\n";
     }
 
@@ -120,22 +110,22 @@ int main() {
                          n_ic
                   << "ms\n";
 
-        // // Clean result folder
-        // for (auto& entry : directory_iterator(p)) {
-        //     remove(entry.path());
-        // }
+        // Clean result folder
+        for (auto& entry : directory_iterator(p)) {
+            remove(entry.path());
+        }
         // Write results to file
-        // size_t idx = 0;
-        // for (auto& r_sp : res_span) {
-        //     std::string path =
-        //         pPath + "test_parallel" + std::to_string(idx) + ".csv";
-        //     std::ofstream ofile(path);
+        size_t idx = 0;
+        for (auto& r_sp : res_span) {
+            std::string path =
+                pPath + "test_parallel" + std::to_string(idx) + ".csv";
+            std::ofstream ofile(path);
 
-        //     for (auto& state : r_sp) {
-        //         ofile << state << "\n";
-        //     }
-        //     idx++;
-        // }
+            for (auto& state : r_sp) {
+                ofile << state << "\n";
+            }
+            idx++;
+        }
 
         std::cout << "--- End of parallel propagation--- \n";
     }

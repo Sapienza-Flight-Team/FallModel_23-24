@@ -54,18 +54,16 @@ class Simulation {
         if (method == "rk4" || method == "") {
             // Default method
             stepper = new RK4Stepper<N>();
+        } else if (method == "rk45") {
+            stepper = new RK45Stepper<N>();
         }
-        // else if (method == "rk45") {
-        //     stepper = new RK4Stepper();
+        // else if (method == "ode113")
+        // {
+        //     /* code */
         // }
-        // // else if (method == "ode113")
-        // // {
-        // //     /* code */
-        // // }
-        // else if (method == "euler") {
-        //     stepper = new EulerStepper();
-        // }
-        else {
+        else if (method == "euler") {
+            stepper = new EulerStepper<N>();
+        } else {
             throw std::invalid_argument("Invalid method");
         }
     }
@@ -239,7 +237,7 @@ std::vector<std::span<State<N>>> Simulation<N>::run_parallel_ic(
         std::cerr << "or decreasing the time interval\n";
         std::cerr << "or increasing the time step\n";
 
-        std::cerr << "or buying more RAM\n";
+        std::cerr << "or downloading more RAM\n";
         std::exit(EXIT_FAILURE);
     }
 
