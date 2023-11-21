@@ -69,7 +69,7 @@ void BallisticModel<N>::operator()(const State<N>& state, State<N>& state_dot,
     double k = 0.5 * rho * cd_S / pc.mass();
     // compute relative velocity
     VReal3 wind_rel_vel = vel - wind_vel;
-    double wind_rel_vel_mod = wind_rel_vel.norm();
+    double wind_rel_vel_mod = wind_rel_vel.mod();
 }
 /**
  * Calculates the initial state of a falling object based on the given

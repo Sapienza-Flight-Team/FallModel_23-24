@@ -74,8 +74,8 @@ GPS get_drop(State<N> S_end, const GPS &gps_target, double heading) {
 
     VReal3 pos = S_end.pos();  // Come prendo la posizione? Devo conoscere il
                                // numero di parametri spaziali
-    double x_dist = pos.x;
-    double y_dist = pos.y;
+    double x_dist = pos[0];
+    double y_dist = pos[1];
     double d = sqrt(pow(x_dist, 2) + pow(y_dist, 2));
 
     // Get decimal representation in GPS coordinates

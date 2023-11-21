@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <boost/numeric/odeint.hpp>
 #include <boost/operators.hpp>
 #include <cmath>
@@ -7,11 +8,215 @@
 
 // Add N dimensions (row vector)
 
-#include <eigen3/Eigen/Dense>
-#include <type_traits>
-
 template <size_t N>
-using VReal = Eigen::Vector<double, N>;
+class VReal : boost::additive1<
+                  VReal<N>,
+                  boost::additive2<VReal<N>, double,
+                                   boost::multiplicative2<VReal<N>, double>>> {
+   protected:
+    std::array<double, N> v;
+
+   public:
+    // Constructors
+    VReal() : v({0}) {}  // default constructor
+    // Initializer list constructor
+    VReal(std::initializer_list<double> l) {
+        if (l.size() != N) {
+            std::cout << "Error: wrong number of elements in VReal initializer list"
+                      << std::endl;
+            exit(1);
+        }
+        size_t i = 0;
+        for (auto it = l.begin(); it != l.end(); it++) {
+            v[i] = *it;
+            i++;
+        }
+    }
+    // Range constructor
+    VReal(typename std::array<double, N>::const_iterator begin,
+          typename std::array<double, N>::const_iterator end) {
+        // Copy the values from the range [begin, end) into this object's data
+        std::copy(begin, end, v.begin());
+    }
+
+    // Array constructor
+    VReal(const std::array<double, N>& arr) {
+        // Copy the values from arr into this object's data
+        for (size_t i = 0; i < N; ++i) {
+            v[i] = arr[i];
+        }
+    }
+
+    VReal(const double val) : v({val}) {}
+
+    VReal(const VReal& other) : v(other.v) {}  // copy constructor
+    VReal(VReal&& other) noexcept {
+        if (this != &other) {
+            v = other.v;
+        }
+    }            // move constructor
+    ~VReal() {}  // Destructor
+
+    // Operators
+    VReal& operator=(const VReal& other) {
+        if (this != &other) {
+            v = other.v;
+        }
+        return *this;
+    }
+
+    VReal& operator=(VReal&& other) noexcept {
+        if (this != &other) {
+            v = other.v;
+        }
+        return *this;
+    }
+
+    VReal& operator+=(const VReal& p) {
+        for (size_t i = 0; i < N; i++) {
+            v[i] += p.v[i];
+        }
+        return *this;
+    }
+
+    VReal& operator-=(const VReal& p) {
+        for (size_t i = 0; i < N; i++) {
+            v[i] -= p.v[i];
+        }
+        return *this;
+    }
+
+    VReal& operator*=(const VReal& p) {
+        for (size_t i = 0; i < N; i++) {
+            v[i] *= p.v[i];
+        }
+        return *this;
+    }
+
+    VReal& operator/=(const VReal& p) {
+        for (size_t i = 0; i < N; i++) {
+            v[i] /= p.v[i];
+        }
+        return *this;
+    }
+
+    VReal& operator+=(const double scalar) {
+        for (size_t i = 0; i < N; i++) {
+            v[i] += scalar;
+        }
+        return *this;
+    }
+
+    VReal& operator-=(const double scalar) {
+        for (size_t i = 0; i < N; i++) {
+            v[i] -= scalar;
+        }
+        return *this;
+    }
+
+    VReal& operator*=(const double scalar) {
+        for (size_t i = 0; i < N; i++) {
+            v[i] *= scalar;
+        }
+        return *this;
+    }
+
+    VReal& operator/=(const double scalar) {
+        for (size_t i = 0; i < N; i++) {
+            v[i] /= scalar;
+        }
+        return *this;
+    }
+
+    VReal operator+(const VReal& other) {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = v[i] + other.v[i];
+        }
+        return res;
+    }
+
+    VReal operator-(const VReal& other) {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = v[i] - other.v[i];
+        }
+        return res;
+    }
+
+    VReal operator/(const VReal& other) {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = v[i] / other.v[i];
+        }
+        return res;
+    }
+
+    VReal operator*(const VReal& other) {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = v[i] * other.v[i];
+        }
+        return res;
+    }
+
+    VReal operator+(const double scalar) {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = v[i] + scalar;
+        }
+        return res;
+    }
+
+    VReal operator-(const double scalar) {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = v[i] - scalar;
+        }
+        return res;
+    }
+
+    VReal operator*(const double scalar) {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = v[i] * scalar;
+        }
+        return res;
+    }
+
+    VReal operator/(const double scalar) {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = v[i] / scalar;
+        }
+        return res;
+    }
+
+    VReal abs() {
+        VReal<N> res;
+        for (size_t i = 0; i < N; i++) {
+            res.v[i] = std::abs(v[i]);
+        }
+        return res;
+    }
+
+    double mod() {
+        double res = 0;
+        for (size_t i = 0; i < N; i++) {
+            res += v[i] * v[i];
+        }
+        return std::sqrt(res);
+    }
+
+    double operator[](size_t i) const { return v[i]; }
+
+    // friend std::ostream &operator<<(std::ostream &out, const VReal &p) {
+    //     out << p.x << " " << p.y << " " << p.z;
+    //     return out;
+
+    // }
+};
+
 using VReal3 = VReal<3>;
 
 // //[VReal3 - Makes VReal3 digestible by odeInt

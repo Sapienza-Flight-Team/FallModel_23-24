@@ -14,7 +14,7 @@
  */
 template <size_t N>
 
-class State : public Eigen::Vector<double, 2 * N> {
+class State : public VReal<2 * N> {
    private:
     double t = 0;
 
@@ -22,122 +22,73 @@ class State : public Eigen::Vector<double, 2 * N> {
     /////////////////////// Constructors ///////////////////////
     ///                                                      ///
 
-    // default constructor
-    State() : Eigen::Vector<double, 2 * N>() { this->setZero(); }
-    // constructor with constant value
-    State(const double val) : Eigen::Vector<double, 2 * N>() {
-        this->setConstant(val);
-    }
-    // Constructor with initializer list
-    State(std::initializer_list<double> init_list)
-        : Eigen::Vector<double, 2 * N>() {
-        assert(init_list.size() ==
-               2 * N);  // Ensure the initializer list is the correct size
-        int i = 0;
-        for (double val : init_list) {
-            (*this)[i++] = val;
+    // Constructors
+    State() { this->v = {0}; }  // default constructor
+
+    // Initializer list constructor
+    State(std::initializer_list<double> l) {
+        if (l.size() != 2 * N) {
+            std::cout
+                << "Error: wrong number of elements in State initializer list"
+                << std::endl;
+            for (const auto& elem : l) {
+                std::cout << elem << ' ';
+            }
+            std::cout << std::endl;
+            exit(1);
+        }
+        size_t i = 0;
+        for (auto it = l.begin(); it != l.end(); it++) {
+            this->v[i] = *it;
+            i++;
         }
     }
-    // Constructor with VReal of 2N elements
-    State(const Eigen::Vector<double, 2 * N>& vec)
-        : Eigen::Vector<double, 2 * N>(vec) {}
 
-    // Constructor with 2 VReal of N rows
-    State(VReal<N> head, VReal<N> tail) {
-        this->template head<N>() = head;
-        this->template tail<N>() = tail;
+    State(const double val) : State<N>({val}) {}
+
+    State(const State& other) : State<N>(other.v) {}  // copy constructor
+
+    State(const VReal<2 * N>& other) {
+        for (size_t i = 0; i < N; ++i) {
+            this->v[i] = other[i];
+        }
+    }  // copy constructor
+
+    State(State&& other) noexcept {
+        if (this != &other) {
+            this->v = other.v;
+        }
+    }  // move constructor
+
+    State(const VReal<N>& pos, const VReal<N>& vel) : State<N>({pos, vel}){};
+
+    ~State() {}  // Destructor
+
+    // = operator
+    State& operator=(const State<N>& other) {
+        if (this != &other) {
+            this->v = other.v;
+        }
+        return *this;
     }
 
-    // move constructor
-    State(State&& other) noexcept
-        : Eigen::Vector<double, 2 * N>(std::move(other)) {
-        t = other.t;
+    State& operator=(State<N>&& other) noexcept {
+        if (this != &other) {
+            this->v = other.v;
+        }
+        return *this;
     }
-    // copy constructor
-    State(const State& other)
-        : Eigen::Vector<double, 2 * N>(other), t(other.t) {}
-    ///                                                       ///
-    ////////////////////////////////////////////////////////////
 
-    /////////////////////////// Operators ///////////////////////////
-    ///                                                           ///
     State& operator()(const double _t) {
         t = _t;
         return *this;
     }
-    // operator=
-    State& operator=(const State& other) {
-        if (this != &other) {
-            this->Eigen::Vector<double, 2 * N>::operator=(other);
-            t = other.t;
-        }
-        return *this;
+    VReal<N> X() const {
+        return VReal<N>(this->v.begin(), this->v.begin() + N);
     }
-    // move operator=
-    State& operator=(State&& other) noexcept {
-        if (this != &other) {
-            this->Eigen::Vector<double, 2 * N>::operator=(std::move(other));
-            t = other.t;
-        }
-        return *this;
+    VReal<N> X_dot() const {
+        return VReal<N>(this->v.begin() + N, this->v.end());
     }
-    // Copy with Eigen::Matrix
-    State& operator=(
-        const Eigen::Matrix<double, 2 * N, 1, 0, 2 * N, 1>& other) {
-        Eigen::Vector<double, 2 * N>::operator=(other);
-        return *this;
-    }
-
-    //// Operators (+=, -=, *=, /=) for State (scalar) and State (vector)
-    ////
-
-    // Vectorial
-    State operator+(const State& other) {
-        return State(this->Eigen::Vector<double, 2 * N>::operator+(other));
-    }
-    State& operator+=(const State& other) {
-        this->Eigen::Vector<double, 2 * N>::operator+=(other);
-        return *this;
-    }
-    State operator-(const State& other) {
-        return State(this->Eigen::Vector<double, 2 * N>::operator-(other));
-    }
-    State& operator-=(const State& other) {
-        this->Eigen::Vector<double, 2 * N>::operator-=(other);
-        return *this;
-    }
-
-    // Scalar
-    State operator*(const double scalar) {
-        return State(this->Eigen::Vector<double, 2 * N>::operator*(scalar));
-    }
-    State& operator*=(const double scalar) {
-        this->Eigen::Vector<double, 2 * N>::operator*=(scalar);
-        return *this;
-    }
-
-    State operator/(const double scalar) {
-        return State(this->Eigen::Vector<double, 2 * N>::operator/(scalar));
-    }
-    State& operator/=(const double scalar) {
-        this->Eigen::Vector<double, 2 * N>::operator/=(scalar);
-        return *this;
-    }
-    // Vector product
-    State operator*(const State& other) {
-        return State(this->Eigen::Vector<double, 2 * N>::operator*(other));
-    }
-    State& operator*=(const State& other) {
-        this->Eigen::Vector<double, 2 * N>::operator*=(other);
-        return *this;
-    }
-    ///                                                            ///
-    //////////////////////////////////////////////////////////////////
-
-    /////////////////////////// Methods ///////////////////////////
-
-    VReal<N> X() const { return this->template head<N>(); }
-    VReal<N> X_dot() const { return this->template tail<N>(); }
 };
 
 //[State - Makes State digestible by odeInt

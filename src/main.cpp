@@ -28,7 +28,7 @@ constexpr double chute_mass = 0.116;
 constexpr double load_mass = 1.15;
 
 VReal3 wind_law(const State<dim3>& state, const VReal<dim3>& pos, double t) {
-    return VReal<dim3>(0, 0, 0);
+    return VReal<dim3>();
 }
 
 std::vector<State<dim3>> createVS0(size_t elements, State<dim3> S0,
