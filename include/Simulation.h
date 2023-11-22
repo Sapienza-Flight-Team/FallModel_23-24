@@ -13,7 +13,33 @@
 #include "Model.h"
 #include "State.h"
 
-constexpr inline size_t N_THREADS = 6;
+enum Metod { rk4, rk45, euler };
+
+extern const unsigned N_THREADS{[&]() {
+    unsigned n_threads{std::thread::hardware_concurrency()};
+    if (n_threads == 0) {
+        n_threads = 1;
+    }
+    return n_threads;
+}()};
+
+TODO:   
+template <size_t N>
+struct Results {
+    std::vector<State<N>> results;
+    std::vector<std::span<State<N>>> results_spans;
+
+    Results() : results(), results_spans() {}
+    Results(size_t n, size_t m = 1) : results(n), results_spans(m) {}
+    void set_span(size_t m) {
+        // Allowed only if results is empty
+        if (results.empty()) {
+            results_spans.resize(m);
+        } else {
+            throw std::runtime_error("Results is not empty");
+        }
+    }
+};
 
 /**
  * @brief Struct containing settings for an ODE simulation.
@@ -30,16 +56,13 @@ typedef struct {
  * @brief Class for simulating the model.
  *
  */
-template <size_t N>
 class Simulation {
    private:
     // Methods parameters
-    std::string method;            /**< Method to be used for simulation. */
-    double time_step;              /**< Time step for simulation. */
-    double time_interval;          /**< Time interval for simulation. */
-    std::vector<State<N>> results; /**< Vector containing the results of the
-                                     simulation. */
-    BaseStepper<N>* stepper;       /**< Pointer to the stepper object. */
+    std::string method;   /**< Method to be used for simulation. */
+    double time_step;     /**< Time step for simulation. */
+    double time_interval; /**< Time interval for simulation. */
+    Metod m;
 
    public:
     /**
@@ -53,16 +76,19 @@ class Simulation {
         : method(method), time_step(dt), time_interval(T) {
         if (method == "rk4" || method == "") {
             // Default method
-            stepper = new RK4Stepper<N>();
+            // stepper = new RK4Stepper<N>();
+            Metod m = rk4;
         } else if (method == "rk45") {
-            stepper = new RK45Stepper<N>();
+            // stepper = new RK45Stepper<N>();
+            Metod m = rk45;
         }
         // else if (method == "ode113")
         // {
         //     /* code */
         // }
         else if (method == "euler") {
-            stepper = new EulerStepper<N>();
+            // stepper = new EulerStepper<N>();
+            Metod m = euler;
         } else {
             throw std::invalid_argument("Invalid method");
         }
@@ -81,7 +107,8 @@ class Simulation {
     /**
      * @brief Changes the simulation settings.
      *
-     * @param settings ODESettings object containing new simulation settings.
+     * @param settings ODESettings object containing new simulation
+     * settings.
      */
     void change_settings(ODESettings settings);
 
@@ -92,45 +119,49 @@ class Simulation {
      * @param S0 Initial State<N> of the system.
      * @param res_ptr Pointer to the result array.
      */
-
-    std::span<State<N>> run(Model<N>* h, State<N> S0,
-                            std::span<State<N>> res_ptr = {});
+    // TODO:
+    template <size_t N>
+    Results<N> run(Model<N>* h, State<N> S0, std::span<State<N>> res_ptr = {});
 
     /**
-     * @brief Runs the simulation in parallel for multiple initial conditions.
+     * @brief Runs the simulation in parallel for multiple initial
+     * conditions.
      *
      * @param h Pointer to the Model object.
      * @param v_S0 Vector of initial states of the system.
+     *
      */
-    std::vector<std::span<State<N>>> run_parallel_ic(Model<N>* h,
-                                                     std::span<State<N>> v_S0);
+    template <size_t N>
+    TODO:
+    Results<N> run_parallel_ic(Model<N>* h, std::span<State<N>> v_S0);
 
-    void own_res(std::vector<State<N>>& v_res) {
-        /**
-         * @brief Returns the results of the simulation.
-         * Transfers ownership from the private member to the user vector.
-         * User should handle runtime_exception if results is empty.
-         *
-         * @return std::vector<State<N>> Vector containing the results of the
-         * simulation.
-         *
-         */
+    // void own_res(std::vector<State<N>>& v_res) {
+    //     /**
+    //      * @brief Returns the results of the simulation.
+    //      * Transfers ownership from the private member to the user
+    //      vector.
+    //      * User should handle runtime_exception if results is empty.
+    //      *
+    //      * @return std::vector<State<N>> Vector containing the results of
+    //      the
+    //      * simulation.
+    //      *
+    //      */
 
-        if (results.empty()) {
-            throw std::runtime_error("No results to return");
-        } else {
-            v_res = std::move(results);
-            results.clear();
-        }
-    }
+    //     if (results.empty()) {
+    //         throw std::runtime_error("No results to return");
+    //     } else {
+    //         v_res = std::move(results);
+    //         results.clear();
+    //     }
+    // }
 };
 
 // Implementations
 
 namespace odeint = boost::numeric::odeint;
 
-template <size_t N>
-void Simulation<N>::change_settings(ODESettings settings) {
+void Simulation::change_settings(ODESettings settings) {
     /**
      * @brief Changes the settings of the simulation
      *
@@ -138,7 +169,7 @@ void Simulation<N>::change_settings(ODESettings settings) {
      *
      * @note Deletes results if pointer is not null
      */
-    results.clear();
+    // results.clear();
 
     time_step = settings.dt;
     time_interval = settings.T;
@@ -146,13 +177,14 @@ void Simulation<N>::change_settings(ODESettings settings) {
 }
 
 template <size_t N>
-std::span<State<N>> Simulation<N>::run(Model<N>* h, State<N> S0,
-                                       std::span<State<N>> res_span) {
+// TODO: Decidere come tornare Results se run viene chiamato con run_parallel_ic
+Results<N> Simulation::run(Model<N>* h, State<N> S0,
+                           std::span<State<N>> res_span) {
     /**
-     * Runs the dynamical model simulation using the provided Model object and
-     * initial state. If a pointer to a State object is provided, the results
-     * will be stored in it. Otherwise, memory will be allocated for the
-     * results.
+     * Runs the dynamical model simulation using the provided Model object
+     * and initial state. If a pointer to a State object is provided, the
+     * results will be stored in it. Otherwise, memory will be allocated for
+     * the results.
      * .
      *
      * @param h Pointer to the Model object to use for the simulation.
@@ -162,30 +194,41 @@ std::span<State<N>> Simulation<N>::run(Model<N>* h, State<N> S0,
      * @note If res_span is given, memory must be managed by the caller
      */
 
+    constexpr size_t N = h->getN();
     // Create stepper
-    RK4Stepper<N> stepper;
-    State<N> S0_step = S0;
-    State<N> out;
-    std::reference_wrapper<Model<N>> h_ref = *h;
+
+    if (m == rk4) {
+        odeint::runge_kutta4<State<N>> stepper;
+    } else if (m == rk45) {
+        odeint::runge_kutta_dopri5<State<N>> stepper;
+    } else if (m == euler) {
+        odeint::euler<State<N>> stepper;
+    }
+
+    // Create a copy of the Model object
+    // This is done to avoid race conditions if an Event modifies the Model
+    Model<N> h_cl = h->clone();
 
     int n_steps = ceil(time_interval / time_step);
 
     if (res_span.empty()) {
-        // res_span not provided, allocate
-        results.clear();
-        results.resize(n_steps + 1);
-        res_span = results;
+        // res_span not provided, create results and allocate
+        // TODO: run should allocate only if is not called by run_parallel_ic.
+        // How to check this with Result struct? ->
     }
 
     res_span[0] = S0;
+    State<N> out;
+    State<N> S0_step = S0;
     double t = 0;
-    if (h->conditionFunc) {
+
+    if (h_cl.conditionFunc) {
         /*
-            Might be nice to add a check of multiple conditions, modifyng the
-            internal Model.operator() to another ode law
-            Can try to enable 2 or more functions objects, returning the sum of
-           ode laws But in this way i need to figure how to stop integration
-            where it doesnt make sense
+            Might be nice to add a check of multiple conditions, modifyng
+           the internal Model.operator() to another ode law Can try to
+           enable 2 or more functions objects, returning the sum of ode laws
+           But in this way i need to figure how to stop integration where it
+           doesnt make sense
 
             For now it just stops integration and gg
         */
@@ -193,21 +236,22 @@ std::span<State<N>> Simulation<N>::run(Model<N>* h, State<N> S0,
         // Condition function is defined, run until condition is met
         for (int i = 0; i < n_steps; i++) {
             t = i * time_step;
-            stepper.do_step(h_ref, S0_step, t, out, time_step);
+            stepper.do_step(h_cl, S0_step, t, out, time_step);
 
-            if (h->conditionFunc(S0_step, out, t + time_step)) {
-                // Would be nice to do a weighted average of the last two states
-                // until last.z > 0
+            if (h_cl->conditionFunc(S0_step, out, t + time_step)) {
+                // Would be nice to do a weighted average of the last two
+                // states until last.z > 0
                 return res_span.subspan(0, i + 1);
             }
             res_span[i + 1] = out(t + time_step);
             S0_step = out;
         }
     } else {
-        // Condition function is not defined, run for n_steps
+        // Condition function is not defined, run for n_steps witthout checking
+        // conditions
         for (int i = 0; i < n_steps; i++) {
             t = i * time_step;
-            stepper.do_step(h_ref, S0_step, t, out, time_step);
+            stepper.do_step(h_cl, S0_step, t, out, time_step);
             res_span[i + 1] = out(t + time_step);
             S0_step = out;
         }
@@ -217,8 +261,7 @@ std::span<State<N>> Simulation<N>::run(Model<N>* h, State<N> S0,
 }
 
 template <size_t N>
-std::vector<std::span<State<N>>> Simulation<N>::run_parallel_ic(
-    Model<N>* h, std::span<State<N>> v_S0) {
+Results<N> Simulation::run_parallel_ic(Model<N>* h, std::span<State<N>> v_S0) {
     // Runs the simulation for each initial condition in v_S0
 
     size_t const& n_ic = v_S0.size();

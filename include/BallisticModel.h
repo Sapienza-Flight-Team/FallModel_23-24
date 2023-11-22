@@ -13,18 +13,18 @@ static const double g = 9.81;       // m/s^2
 
 // N = 3 is the default for this model, only 3Dimensional space variables
 
-
 class BallisticModel : public Model<3> {
    public:
     BallisticModel(
         PayChute<3> pc, Wind<3> _Vw,
         ConFun<3> fi = [](State<3> S0, State<3> S0_dot,
-                             double t) { return S0_dot.X()[2] > 0; })
+                          double t) { return S0_dot.X()[2] > 0; })
         : Model<3>(fi), pc(pc), Vw(_Vw) {}
     ~BallisticModel() {}
 
-    // Da portarlo in Model.cpp
+ 
     void operator()(const State<3>& S0, State<3>& S0_dot, double t);
+    BallisticModel* clone() const { return new BallisticModel(*this); }
 
    private:
     PayChute<3> pc;
@@ -57,8 +57,8 @@ static double atm(double z) {
     }
 }
 
-void BallisticModel::operator()(const State<3>& state,
-                                      State<3>& state_dot, double t) {
+void BallisticModel::operator()(const State<3>& state, State<3>& state_dot,
+                                double t) {
     VReal3 pos = state.X();
     VReal3 vel = state.X_dot();
     VReal3 wind_vel = Vw(state, pos, t);
@@ -80,8 +80,6 @@ void BallisticModel::operator()(const State<3>& state,
     state_dot[3] = -k * wind_rel_vel_mod * wind_rel_vel[0];
     state_dot[4] = -k * wind_rel_vel_mod * wind_rel_vel[1];
     state_dot[5] = -k * wind_rel_vel_mod * wind_rel_vel[2] - g;
-
-    
 }
 /**
  * Calculates the initial state of a falling object based on the given
@@ -91,7 +89,6 @@ void BallisticModel::operator()(const State<3>& state,
  * @param heading The initial heading of the object in degrees.
  * @return The initial state of the object.
  */
-
 
 State<3> get_ic_from_comms(double z, double vmod, double heading) {
     // Convert heading from degrees to radians
