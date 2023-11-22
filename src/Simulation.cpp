@@ -73,6 +73,7 @@ std::span<State> Simulation::run(Model* h, State S0,
                 // Would be nice to do a weighted average of the last two states
                 // until last.z > 0
                 return res_span.subspan(0, i + 1);
+                
             }
             res_span[i + 1] = out(t + time_step);
             S0_step = out;
