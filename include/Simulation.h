@@ -23,7 +23,7 @@ extern const unsigned N_THREADS{[&]() {
     return n_threads;
 }()};
 
-TODO:   
+// TODO:
 template <size_t N>
 struct Results {
     std::vector<State<N>> results;
@@ -132,7 +132,7 @@ class Simulation {
      *
      */
     template <size_t N>
-    TODO:
+    // TODO :
     Results<N> run_parallel_ic(Model<N>* h, std::span<State<N>> v_S0);
 
     // void own_res(std::vector<State<N>>& v_res) {
