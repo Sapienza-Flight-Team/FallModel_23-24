@@ -49,12 +49,7 @@ int init_model(const double vel[2], const double wind[2], const double pos[2], d
     PayChute pc(cd_load, sur_load, m);
     Wind Vw(wind_law);
     BallisticModel bm(pc, Vw, f_stop);
-    Simulation sim(0.01, 10, "");
-
-    std::vector<State> res;
-    State last_state;
-
-    GPS gps = GPS(pos[0], pos[1]);
+    Simulation sim(step, time, integrator);
 
     double heading = vel[0];
     double velocity = vel[1];
@@ -64,8 +59,15 @@ int init_model(const double vel[2], const double wind[2], const double pos[2], d
 
     State S0(0, 0, -h, vx, vy, 0);
     std::span<State> res_span = sim.run(&bm, S0);
-    res = sim.ret_res();
-    last_state = res_span.back();
+    std::vector<State> res = sim.ret_res();
+    State last_state = res_span.back();
+
+    double dist = sqrt(last_state.pos().x*last_state.pos().x + last_state.pos().y*last_state.pos().y);
+    double head = atan2(last_state.pos().y, last_state.pos().x);
+    GPS gps = GPS(pos[0], pos[1]);
+    GPS drop_point = translate_gps(gps, -dist, head, true);
+    result[0] = drop_point.lat;
+    result[1] = drop_point.lon;
     return 0;
 }
 
@@ -78,42 +80,24 @@ extern "C" {
 #include <stdio.h>
 #define KTTOMS 0.541 /* conversione da nodi a metri al secondo: 1 nodo = 0.541 m/s */
 
-/* little README
-
-Un esempio di chiamata da python:
-
-
-
-vel_list = [2, 22]              # velocità vettoriale descritta come direzione (in radianti N/NE) e velocità in m/s
-wind_str = "18003KT"            # il vento si descrive dicendo da dove viene e si indica con una stringa "{gradi}{nodi}KT" (es. "24010KT": il vento viene da 240° a velocità 10 nodi)
-pos = [41.8317465, 12.3334762]  # posizione del target espressa come latitudine e longitudine
-h = 33.9                        # quota di lancio in metri
-Cd = 1.5                        # cd del paracadute
-S = 0.28                        # superficie del paracadute in m2
-m = 0.560                       # massa in chilogrammi del paracadute+payload
-time = 10                       # il tempo in secondi
-step = 2                        # lo step in millisecondi
-integrator = ''                 # integrator (es. "rk4"(default), "rk45", "euler")
-
-ad.run(vel_list, wind_str, wind_str, pos, h, Cd, S, m, time, step, integrator)
-
-
-*/
 static PyObject*
 run(PyObject *self, PyObject *args)
 {
+    #ifndef NDEBUG
+    self=self;
+    #endif
     PyObject* velObj;       /* oggetto che definisce il vettore velocità dell'aereo */
     const char* wind_str;   /* stringa che descrive il vento */
     PyObject* posObj;       /* oggetto che definisce la posizione del target */
-    double h;               /* oggetto che definisce la quota di lancio */
-    double Cd;              /* Cd del paracadute */
-    double S;               /* Superficie del paracadute */
-    double m;               /* massa del paracadute+payload */
-    double time;            /* tempo di simulazione */
-    double step;            /* time step del metodo numerico */
+    float h;                /* oggetto che definisce la quota di lancio */
+    float Cd;               /* Cd del paracadute */
+    float S;                /* Superficie del paracadute */
+    float m;                /* massa del paracadute+payload */
+    int time;               /* tempo di simulazione */
+    int step;               /* time step del metodo numerico */
     const char* integrator; /* integratore scelto */
 
-    if (!PyArg_ParseTuple(args, "OsOffffffs", &velObj, &wind_str, &posObj, &h, &Cd, &S, &m, &time, &step, &integrator)) {
+    if (!PyArg_ParseTuple(args, "OsOffffiis", &velObj, &wind_str, &posObj, &h, &Cd, &S, &m, &time, &step, &integrator)) {
         return NULL;
     }
 
@@ -133,12 +117,11 @@ run(PyObject *self, PyObject *args)
 
     double result[2];
     int ret = 0;
-    ret = init_model(vel, wind, pos, h, Cd, S, m, step/1000., time, integrator, result);
-
+    ret = init_model(vel, wind, pos, (double)h, (double)Cd, (double)S, (double)m, (double)step/1000., (double)time, integrator, result);
     if (ret != 0) return NULL;
 
     // Converti result in oggetto Python
-    PyObject* resultObj;
+    PyObject* resultObj = PyList_New(2);
     PyList_SetItem(resultObj, 0, PyFloat_FromDouble(result[0]));
     PyList_SetItem(resultObj, 1, PyFloat_FromDouble(result[1]));
 
@@ -157,7 +140,11 @@ libsft_fall_modelModule = {
     "libsft_fall_model",
     "Questo modulo contiene le funzioni per le simulazioni.",
     -1,
-    module_methods
+    module_methods,
+    NULL,
+    NULL,
+    NULL,
+    NULL
 };
 
 PyMODINIT_FUNC
