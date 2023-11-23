@@ -5,4 +5,5 @@
 #include "Settings.h"
 #include "Simulation.h"
 #include "State.h"
+#include "Waypoint.h"
 #include "Wind.h"

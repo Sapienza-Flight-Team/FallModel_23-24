@@ -1,3 +1,20 @@
+#include "../include/pch.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
 
  *  TODO: traslazione
@@ -5,13 +22,7 @@
  *  TODO: costruire settings
  */
 // 2.72, -0.26, 2.83
-#include <chrono>
-#include <filesystem>
-#include <fstream>
-#include <iomanip>
 
-#include "../include/pch.h"
-#include "Waypoint.h"
 
 const double Cd = 0.825;
 const double S = M_PI * pow(0.3, 2);  // 0.3 m radius
