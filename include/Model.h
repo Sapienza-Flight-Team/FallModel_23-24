@@ -21,8 +21,8 @@ class Model {
     // ODE function
     virtual void operator()(const State<N>& S0, State<N>& S0_dot, double t) = 0;
 
-    size_t getN() { return N; }
-    virtual Model<N>* clone() const = 0;
+    static constexpr size_t getN() { return N; }
+
     virtual ~Model() {}
 
     ConFun<N> conditionFunc = nullptr;

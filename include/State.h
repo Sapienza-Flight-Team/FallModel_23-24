@@ -53,11 +53,13 @@ class State : public VReal<2 * N> {
         for (size_t i = 0; i < 2 * N; i++) {
             this->v = other.data();
         }
+       
     }  // copy constructor
     State(State&& other) noexcept {
         if (this != &other) {
             this->v = other.v;
         }
+        t = other.t;
     }  // move constructor
 
     State(const VReal<N>& pos, const VReal<N>& vel) : State<N>({pos, vel}){};
@@ -69,6 +71,7 @@ class State : public VReal<2 * N> {
         if (this != &other) {
             this->v = other.v;
         }
+        t = other.t;
         return *this;
     }
 
@@ -76,6 +79,7 @@ class State : public VReal<2 * N> {
         if (this != &other) {
             this->v = other.v;
         }
+        t = other.t;
         return *this;
     }
 

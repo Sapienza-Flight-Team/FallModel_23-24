@@ -5,24 +5,23 @@
 #include "State.h"
 
 namespace odeint = boost::numeric::odeint;
-template <size_t N>
+template <typename ModelType, size_t N = ModelType::getN()>
 class BaseStepper {
    public:
     BaseStepper() {}
     virtual ~BaseStepper() {}  // Virtual destructor
-    virtual void do_step(std::reference_wrapper<Model<N>> model, State<N> in,
-                         double t, State<N> out, double dt) = 0;
+    virtual void do_step(ModelType& model, State<N>& in, double t,
+                         State<N>& out, double dt) = 0;
 };
 
-template <size_t N>
-
-class RK4Stepper : public BaseStepper<N> {
+template <typename ModelType, size_t N = ModelType::getN()>
+class RK4Stepper : public BaseStepper<ModelType> {
    public:
     RK4Stepper() {}
     ~RK4Stepper() {}
 
-    void do_step(std::reference_wrapper<Model<N>> model, State<N> in, double t,
-                 State<N> out, double dt) override {
+    void do_step(ModelType& model, State<N>& in, double t, State<N>& out,
+                 double dt) override {
         stepper.do_step(model, in, t, out, dt);
     }
 
@@ -32,14 +31,14 @@ class RK4Stepper : public BaseStepper<N> {
         stepper;
 };
 
-template <size_t N>
-class RK45Stepper : public BaseStepper<N> {
+template <typename ModelType, size_t N = ModelType::getN()>
+class RK45Stepper : public BaseStepper<ModelType> {
    public:
     RK45Stepper() {}
     ~RK45Stepper() {}
 
-    void do_step(std::reference_wrapper<Model<N>> model, State<N> in, double t,
-                 State<N> out, double dt) override {
+    void do_step(ModelType& model, State<N>& in, double t, State<N>& out,
+                 double dt) override {
         stepper.do_step(model, in, t, out, dt);
     }
 
@@ -49,14 +48,13 @@ class RK45Stepper : public BaseStepper<N> {
         stepper;
 };
 
-template <size_t N>
-class EulerStepper : public BaseStepper<N> {
+template <typename ModelType, size_t N = ModelType::getN()>
+class EulerStepper : public BaseStepper<ModelType> {
    public:
     EulerStepper() {}
     ~EulerStepper() {}
-
-    void do_step(std::reference_wrapper<Model<N>> model, State<N> in, double t,
-                 State<N> out, double dt) override {
+    void do_step(ModelType& model, State<N>& in, double t, State<N>& out,
+                 double dt) override {
         stepper.do_step(model, in, t, out, dt);
     }
 

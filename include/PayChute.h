@@ -10,28 +10,17 @@ class PayChute {
    public:
     PayChute(
         // PayLoad data
-        double (*pl_cd)(const State<N>&, const VReal<N>&, const double),
-        double (*pl_surface)(const State<N>&, const VReal<N>&, const double),
-        double pl_mass)
+        std::function<double(const State<N>&, const double)> cds, double mass)
+        : pl_cds(cds), pl_mass(mass) {}
 
-        : load({pl_cd, pl_surface, pl_mass}) {}
-
-    PayChute(const PayChute& other) : load(other.load) {}
     ~PayChute() {}
 
-    double Cd_S(const State<N>& state, const VReal<N>& Vw, const double t) {
-        return (load.cd(state, Vw, t) * load.sur(state, Vw, t));
+    double CdS(const State<N>& state, const double t) {
+        return this->pl_cds(state, t);
     }
-    double mass() { return this->load.mass; }
+    double mass() { return this->pl_mass; }
 
    private:
-    struct {
-        std::function<double(const State<N>&, const VReal<N>&,
-                             const double)>
-            cd;  // Pointer to function defining Cd
-        std::function<double(const State<N>&, const VReal<N>&,
-                             const double)>
-            sur;  // Pointer to function defining Surface
-        double mass;
-    } load;
+    std::function<double(const State<N>&, const double)> pl_cds;
+    double pl_mass;  // Payload mass
 };

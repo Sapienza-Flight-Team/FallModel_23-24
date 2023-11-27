@@ -22,8 +22,7 @@ class BallisticModel : public Model<3> {
         : Model<3>(fi), pc(pc), Vw(_Vw) {}
     ~BallisticModel() {}
 
- 
-    void operator()(const State<3>& S0, State<3>& S0_dot, double t);
+     void operator()(const State<3>& S0, State<3>& S0_dot, double t);
     BallisticModel* clone() const { return new BallisticModel(*this); }
 
    private:
@@ -49,11 +48,11 @@ State<3> get_ic_from_comms(double z, double vmod, double heading);
  *
  */
 
-static double atm(double z) {
-    if (z < 0) {
+static double atm(double h) {
+    if (h < 0) {
         return 0;
     } else {
-        return rho0 * exp(std::pow(10, -4) * z);
+        return rho0 * exp(std::pow(10, -4) * h);
     }
 }
 
@@ -64,7 +63,7 @@ void BallisticModel::operator()(const State<3>& state, State<3>& state_dot,
     VReal3 wind_vel = Vw(state, pos, t);
 
     // compute cd_S
-    double cd_S = pc.Cd_S(state, wind_vel, t);
+    double cd_S = pc.CdS(state, t);
     // compute coefficient rho (z is downward so flip the sign)
     double rho = atm(-pos[2]);
     // Compute final coefficient
@@ -79,7 +78,7 @@ void BallisticModel::operator()(const State<3>& state, State<3>& state_dot,
 
     state_dot[3] = -k * wind_rel_vel_mod * wind_rel_vel[0];
     state_dot[4] = -k * wind_rel_vel_mod * wind_rel_vel[1];
-    state_dot[5] = -k * wind_rel_vel_mod * wind_rel_vel[2] - g;
+    state_dot[5] = -k * wind_rel_vel_mod * wind_rel_vel[2] + g;
 }
 /**
  * Calculates the initial state of a falling object based on the given
