@@ -25,8 +25,6 @@ set(SFT_SOURCES
     ${SRC_DIR}/bridge.cpp
 )
 
-message(${PYTHON_INCLUDE_DIRS})
-
 include_directories(
     ${INC_DIR}
     ${PYTHON_INCLUDE_DIRS}
