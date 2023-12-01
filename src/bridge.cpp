@@ -78,7 +78,7 @@ extern "C" {
 #endif /*defined(__cplusplus)*/
 
 #include <stdio.h>
-#define KTTOMS 0.541 /* conversione da nodi a metri al secondo: 1 nodo = 0.541 m/s */
+#define KT2M 0.541 /* conversione da nodi a metri al secondo: 1 nodo = 0.541 m/s */
 
 static PyObject*
 run(PyObject *self, PyObject *args)
@@ -112,7 +112,7 @@ run(PyObject *self, PyObject *args)
         int speed_knots;
         sscanf(wind_str, "%3d%2dKT", &angle_grad, &speed_knots);
         wind[0] = angle_grad * M_PI / 180.0;
-        wind[1] = speed_knots * KTTOMS;
+        wind[1] = speed_knots * KT2M;
     }
 
     double result[2];
