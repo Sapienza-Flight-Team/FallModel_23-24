@@ -8,7 +8,7 @@
  * @brief initialize and run the model
  *
  * @param size : num of launches
- * @param wind : {wind[2*i+0], wind[2*i+1]} is {degree, knots} of the wind (remind: 0° = the wind go to Sud from North)
+ * @param wind : {wind[2*i+0], wind[2*i+1]} is {degree, m/s} of the wind (remind: 0° = the wind go to Sud from North)
  * @param vel : {vel[3*i+0], vel[3*i+1], vel[3*i+2]} is {heading, magnitude, v_down} of the UAV velocity
  * @param target : {target[2*i+0], target[2*i+1]} is the GPS position of the target
  * @param h : h[i] is the altitude (m)
@@ -80,11 +80,11 @@ run(PyObject *self, PyObject *args)
 
     /* alloc memory */
     double
-        *c_wind = (double*)malloc(size*2*sizeof(double)),
-        *c_vel  = (double*)malloc(size*3*sizeof(double)),
+        *c_wind    = (double*)malloc(size*2*sizeof(double)),
+        *c_vel     = (double*)malloc(size*3*sizeof(double)),
         *c_target  = (double*)malloc(size*2*sizeof(double)),
-        *c_h    = (double*)malloc(size*sizeof(double)),
-        *c_m    = (double*)malloc(size*sizeof(double));
+        *c_h       = (double*)malloc(size*sizeof(double)),
+        *c_m       = (double*)malloc(size*sizeof(double));
     if (c_wind == NULL || c_vel == NULL || c_target == NULL || c_h == NULL || c_m == NULL) return NULL;
 
     /* initialize memory */
@@ -101,17 +101,17 @@ run(PyObject *self, PyObject *args)
             c_wind[2*i] = angle_grad * M_PI / 180.0;
             c_wind[2*i+1] = speed_knots * KT2M;
         }
-        if (!PyList_Check(item_vel) || PyList_GET_SIZE(item_vel) != 3) return NULL;
-        c_vel[3*i] = PyFloat_AsDouble(PyList_GET_ITEM(item_vel, 0));
-        c_vel[3*i+1] = PyFloat_AsDouble(PyList_GET_ITEM(item_vel, 1));
-        c_vel[3*i+2] = PyFloat_AsDouble(PyList_GET_ITEM(item_vel, 2));
+        if (!PyTuple_Check(item_vel) || PyTuple_GET_SIZE(item_vel) != 3) return NULL;
+        c_vel[3*i] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 0));
+        c_vel[3*i+1] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 1));
+        c_vel[3*i+2] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 2));
 
-        if (!PyList_Check(item_target) || PyList_GET_SIZE(item_target) != 2) return NULL;
-        c_target[2*i] = PyFloat_AsDouble(PyList_GET_ITEM(item_target, 0));
-        c_target[2*i+1] = PyFloat_AsDouble(PyList_GET_ITEM(item_target, 1));
+        if (!PyTuple_Check(item_target) || PyTuple_GET_SIZE(item_target) != 2) return NULL;
+        c_target[2*i] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 0));
+        c_target[2*i+1] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 1));
 
-        c_h[i]   = PyFloat_AsDouble(PyList_GET_ITEM(h, i));
-        c_m[i]   = PyFloat_AsDouble(PyList_GET_ITEM(m, i));
+        c_h[i] = PyFloat_AsDouble(PyList_GET_ITEM(h, i));
+        c_m[i] = PyFloat_AsDouble(PyList_GET_ITEM(m, i));
     }
 
     /* prepare output */
@@ -123,9 +123,7 @@ run(PyObject *self, PyObject *args)
     /* convert result in List */
     PyObject* resultObj = PyList_New(size);
     for (Py_ssize_t i = 0; i < size; ++i) {
-        PyObject* item_result = PyList_New(2);
-        PyList_SetItem(item_result, 0, PyFloat_FromDouble(result[2*i]));
-        PyList_SetItem(item_result, 1, PyFloat_FromDouble(result[2*i+1]));
+        PyObject* item_result = Py_BuildValue("(ff)", PyFloat_FromDouble(result[2*i]), PyFloat_FromDouble(result[2*i+1]));
         PyList_SetItem(resultObj, i, item_result);
     }
 
