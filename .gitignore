@@ -1,5 +1,7 @@
-vscode/
+.vscode/
+.venv/
 bin/
 build/
 test/
 CMakeFiles/
+.cache/

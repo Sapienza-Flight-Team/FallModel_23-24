@@ -1,130 +1,140 @@
-/*
- * NOTA: python chiama una funzione che calcola il vento, poi chiama il modello per il calcolo del punto di sgancio
- */
-
-
-
 #ifdef NDEBUG
 #pragma message("Release mode")
 #else
 #pragma message("Debug mode")
 #endif /* NDEBUG */
 
-#include "../include/pch.h"
-#include <Python.h>
-
-
-/********** SISTEMARE *************/
-const double Cd = 0.825;
-const double S = M_PI * pow(0.3, 2);  // 0.3 m radius
-double cd_load(State s, Real3 Vr, double t) {
-    if (t < 1) {
-        // add cosine function of time
-        return 0.5 * (1 - cos(3 * t)) * Cd;
-
-    } else {
-        return Cd;
-    }
-}
-
-double sur_load(State s, Real3 Vr, double t) { return S; }
-
-const double wind_mod = 1.38889;
-const double wind_dir = 300 * M_PI / 180;
-const Real3 wind_speed =
-    Real3(wind_mod * cos(wind_dir), wind_mod* sin((wind_dir)), 0);
-Real3 wind_law(State state, Real3 pos, double t) { return wind_speed; }
-
-/*std::function<double(State, Real3, double)> cd_load= [&Cd] (State state, Real3 Vw, double t) {return Cd;};*/
-/*********************************/
-
-ConFun f_stop = [](State state, State S0_dot, double t) {
-    return (state.pos().z > 0);
-};
-
-
-
-int init_model(const double vel[2], const double wind[2], const double pos[2], double h, double Cd, double S, double m, double step, double time, const char* integrator, double result[2])
+/**
+ * @brief initialize and run the model
+ *
+ * @param size : num of launches
+ * @param wind : {wind[2*i+0], wind[2*i+1]} is {degree, knots} of the wind (remind: 0° = the wind go to Sud from North)
+ * @param vel : {vel[3*i+0], vel[3*i+1], vel[3*i+2]} is {heading, magnitude, v_down} of the UAV velocity
+ * @param target : {target[2*i+0], target[2*i+1]} is the GPS position of the target
+ * @param h : h[i] is the altitude (m)
+ * @param m : m[i] is the mass of the payload (Kg)
+ * @param CdS : is the coefficient of the parachute (m2)
+ * @param time : time of the simulation (s)
+ * @param step : step of the simulation (s)
+ * @param integrator : integrator of the simulation
+ * @param result : {result[2*i+0], result[2*i+1]} GPS coordinate of the launch
+ * @return int : 0 = anyError, 1 = anErrorEncountered
+ */
+int
+cxx_run(int size, double* wind, double* vel, double* target, double* h, double* m, double CdS, double time, double step, const char* integrator, double* result)
 {
-    PayChute pc(cd_load, sur_load, m);
-    Wind Vw(wind_law);
-    BallisticModel bm(pc, Vw, f_stop);
-    Simulation sim(step, time, integrator);
-
-    double heading = vel[0];
-    double velocity = vel[1];
-
-    double vx = velocity*cos(heading); /* heading in radianti */
-    double vy = velocity*sin(heading); /* heading in radianti */
-
-    State S0(0, 0, -h, vx, vy, 0);
-    std::span<State> res_span = sim.run(&bm, S0);
-    std::vector<State> res = sim.ret_res();
-    State last_state = res_span.back();
-
-    double dist = sqrt(last_state.pos().x*last_state.pos().x + last_state.pos().y*last_state.pos().y);
-    double head = atan2(last_state.pos().y, last_state.pos().x);
-    GPS gps = GPS(pos[0], pos[1]);
-    GPS drop_point = translate_gps(gps, -dist, head, true);
-    result[0] = drop_point.lat;
-    result[1] = drop_point.lon;
     return 0;
 }
 
+#include "../include/pch.h"
+#include <Python.h>
 
-/* C++ flag for g++ compilers */
 #if defined(__cplusplus)
 extern "C" {
 #endif /*defined(__cplusplus)*/
 
 #include <stdio.h>
+
 #define KT2M 0.541 /* conversione da nodi a metri al secondo: 1 nodo = 0.541 m/s */
 
 static PyObject*
 run(PyObject *self, PyObject *args)
 {
-    #ifndef NDEBUG
-    self=self;
-    #endif
-    PyObject* velObj;       /* oggetto che definisce il vettore velocità dell'aereo */
-    const char* wind_str;   /* stringa che descrive il vento */
-    PyObject* posObj;       /* oggetto che definisce la posizione del target */
-    float h;                /* oggetto che definisce la quota di lancio */
-    float Cd;               /* Cd del paracadute */
-    float S;                /* Superficie del paracadute */
-    float m;                /* massa del paracadute+payload */
-    int time;               /* tempo di simulazione */
-    int step;               /* time step del metodo numerico */
-    const char* integrator; /* integratore scelto */
+    /* params of run */
+    PyObject
+        *wind,       /* describe the wind:   '{degree}{nodes}KT'          */
+        *vel,        /* velocity of UAV:   [radians, magnitude, v_down]   */
+        *target,     /* GPS target position: [latitude, longitude]        */
+        *h,          /* altitude of UAV (in m)                            */
+        *m;          /* Mass of payloads (in g)                           */
+    float CdS;       /* CdS coefficient of parachutes  */
+    int time,        /* Time of the simulation (in s)  */
+        step;        /* Step of the simulation (in ms) */
+    const char* integrator; /* integrator */
 
-    if (!PyArg_ParseTuple(args, "OsOffffiis", &velObj, &wind_str, &posObj, &h, &Cd, &S, &m, &time, &step, &integrator)) {
+    if (!PyArg_ParseTuple(args, "OOOOOfiis", &wind, &vel, &target, &h, &m, &CdS, &time, &step, &integrator)) {
         return NULL;
     }
 
-    /* Leggo gli oggetti */
-    double pos[2], wind[2], vel[2];
-    pos[0]  = PyFloat_AsDouble(PyList_GetItem(posObj, 0)),  pos[1] = PyFloat_AsDouble(PyList_GetItem(posObj, 1));
-    vel[0]  = PyFloat_AsDouble(PyList_GetItem(velObj, 0)),  vel[1] = PyFloat_AsDouble(PyList_GetItem(velObj, 1));
-
-    /* leggo il vento */
+    /* check the objects */
     {
-        int angle_grad;
-        int speed_knots;
-        sscanf(wind_str, "%3d%2dKT", &angle_grad, &speed_knots);
-        wind[0] = angle_grad * M_PI / 180.0;
-        wind[1] = speed_knots * KT2M;
+        int
+            flag_wind  = !PyList_Check(wind),
+            flag_vel   = !PyList_Check(vel),
+            flag_target   = !PyList_Check(target),
+            flag_h     = !PyList_Check(h),
+            flag_m     = !PyList_Check(m);
+        if (flag_wind || flag_vel || flag_target || flag_h || flag_m) {
+            return NULL;
+        }
     }
 
-    double result[2];
-    int ret = 0;
-    ret = init_model(vel, wind, pos, (double)h, (double)Cd, (double)S, (double)m, (double)step/1000., (double)time, integrator, result);
+    /* check size */
+    Py_ssize_t size = 0;
+    if (size == 0) size = PyList_GET_SIZE(wind); else if (size != PyList_GET_SIZE(wind)) return NULL;
+    if (size == 0) size = PyList_GET_SIZE(vel);  else if (size != PyList_GET_SIZE(vel))  return NULL;
+    if (size == 0) size = PyList_GET_SIZE(target);  else if (size != PyList_GET_SIZE(target))  return NULL;
+    if (size == 0) size = PyList_GET_SIZE(h);    else if (size != PyList_GET_SIZE(h))    return NULL;
+    if (size == 0) size = PyList_GET_SIZE(m);    else if (size != PyList_GET_SIZE(m))    return NULL;
+    if (size == 0) return NULL;
+
+    /* alloc memory */
+    double
+        *c_wind = (double*)malloc(size*2*sizeof(double)),
+        *c_vel  = (double*)malloc(size*3*sizeof(double)),
+        *c_target  = (double*)malloc(size*2*sizeof(double)),
+        *c_h    = (double*)malloc(size*sizeof(double)),
+        *c_m    = (double*)malloc(size*sizeof(double));
+    if (c_wind == NULL || c_vel == NULL || c_target == NULL || c_h == NULL || c_m == NULL) return NULL;
+
+    /* initialize memory */
+    for (Py_ssize_t i = 0; i < size; ++i) {
+        PyObject
+            *item_wind = PyList_GET_ITEM(wind, i),
+            *item_vel = PyList_GET_ITEM(vel, i),
+            *item_target = PyList_GET_ITEM(target, i);
+        {
+            int angle_grad;
+            int speed_knots;
+            const char* str = PyUnicode_AsUTF8(item_wind);
+            sscanf(str, "%3d%2dKT", &angle_grad, &speed_knots);
+            c_wind[2*i] = angle_grad * M_PI / 180.0;
+            c_wind[2*i+1] = speed_knots * KT2M;
+        }
+        if (!PyList_Check(item_vel) || PyList_GET_SIZE(item_vel) != 3) return NULL;
+        c_vel[3*i] = PyFloat_AsDouble(PyList_GET_ITEM(item_vel, 0));
+        c_vel[3*i+1] = PyFloat_AsDouble(PyList_GET_ITEM(item_vel, 1));
+        c_vel[3*i+2] = PyFloat_AsDouble(PyList_GET_ITEM(item_vel, 2));
+
+        if (!PyList_Check(item_target) || PyList_GET_SIZE(item_target) != 2) return NULL;
+        c_target[2*i] = PyFloat_AsDouble(PyList_GET_ITEM(item_target, 0));
+        c_target[2*i+1] = PyFloat_AsDouble(PyList_GET_ITEM(item_target, 1));
+
+        c_h[i]   = PyFloat_AsDouble(PyList_GET_ITEM(h, i));
+        c_m[i]   = PyFloat_AsDouble(PyList_GET_ITEM(m, i));
+    }
+
+    /* prepare output */
+    double* result = (double*)malloc(size*2*sizeof(double));
+    if (result == NULL) return NULL;
+    int ret = cxx_run((int)size, c_wind, c_vel, c_target, c_h, c_m, CdS, time, step/1000., integrator, result);
     if (ret != 0) return NULL;
 
-    // Converti result in oggetto Python
-    PyObject* resultObj = PyList_New(2);
-    PyList_SetItem(resultObj, 0, PyFloat_FromDouble(result[0]));
-    PyList_SetItem(resultObj, 1, PyFloat_FromDouble(result[1]));
+    /* convert result in List */
+    PyObject* resultObj = PyList_New(size);
+    for (Py_ssize_t i = 0; i < size; ++i) {
+        PyObject* item_result = PyList_New(2);
+        PyList_SetItem(item_result, 0, PyFloat_FromDouble(result[2*i]));
+        PyList_SetItem(item_result, 1, PyFloat_FromDouble(result[2*i+1]));
+        PyList_SetItem(resultObj, i, item_result);
+    }
 
+    free(result);
+    free(c_m);
+    free(c_h);
+    free(c_target);
+    free(c_vel);
+    free(c_wind);
     return Py_BuildValue("O", resultObj);
 }
 
