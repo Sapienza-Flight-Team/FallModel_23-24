@@ -62,7 +62,7 @@ int main() {
         auto start = std::chrono::high_resolution_clock::now();
         for (size_t i = 0; i < n_ic; i++) {
             Results res = s.run(bm, vS0[i]);
-          
+            std::cout << res.getLast() << "\n";
         }
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration =
@@ -75,12 +75,10 @@ int main() {
                          n_ic
                   << "ms\n";
 
-        std::vector<State<dim3>> res;
-
-        std::ofstream file("../test/test_auto.csv");
-        for (size_t i = 0; i < res.size(); i++) {
-            file << res[i] << "\n";
-        }
+        // std::ofstream file("../test/test_auto.csv");
+        // for (size_t i = 0; i < res.size(); i++) {
+        //     file << res[i] << "\n";
+        // }
         std::cout << "--- End of serial code --- \n\n";
     }
 

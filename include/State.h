@@ -94,7 +94,9 @@ class State : public VReal<2 * N> {
     VReal<N> X_dot() const {
         return VReal<N>(this->v.begin() + N, this->v.end());
     }
-
+    double get_t() const {
+        return t;
+    }
     friend std::ostream& operator<<(std::ostream& out, const State& p) {
         out << p.X() << "," << p.X_dot() << ",t=" << p.t;
         return out;

@@ -59,7 +59,6 @@ extern const unsigned N_THREADS{[]() {
     return n_threads;
 }()};
 
-
 template <size_t N>
 struct Results {
    private:
@@ -67,7 +66,7 @@ struct Results {
     std::vector<std::span<State<N>>> results_view;
 
    public:
-    // View only operator, doenst allow to modify the results
+    
     Results() : results(nullptr) {}
     Results(State<N>* res, std::span<State<N>> res_span) : results(res) {
         results_view.push_back(res_span);
@@ -76,12 +75,28 @@ struct Results {
     Results(State<N>* res, std::vector<std::span<State<N>>> res_spans)
         : results(res), results_view(res_spans) {}
     ~Results() {}
+
+    // View only operator, doenst allow to modify the results
     const std::span<State<N>>& operator[](size_t i) const {
         if (results) {
             if (i >= results_view.size() || results_view[i].empty()) {
                 throw std::out_of_range("Index out of range");
             }
-            return results_view[i];
+
+            if (results_view.size() == 1) {
+                return results_view[0][i];  // Sintax results[i] to
+                                            // access results if single model
+            }
+            return results_view[i];  // Sintax results[i][j] to access results
+
+        } else {
+            throw std::runtime_error("Results not initialized");
+        }
+    }
+
+    State<N> getLast() {
+        if (results) {
+            return results_view.back().back();
         } else {
             throw std::runtime_error("Results not initialized");
         }
