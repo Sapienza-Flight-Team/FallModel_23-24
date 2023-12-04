@@ -72,14 +72,16 @@ GPS translate_gps(const GPS &gps, double d, double head, bool rad) {
  * @param heading The heading of the aircraft in degrees.
  * @return The GPS coordinates of the drop point.
  */
-GPS get_drop(State S_end, const GPS &gps_target, double heading) {
+template <size_t N>
+GPS get_drop(State<N> S_end, const GPS &gps_target, double heading) {
     GPS gps_drop;
     double R_E = 6378100;                    // Earth radius (m)
     double head_rad = heading * M_PI / 180;  // Convert heading to rad
 
-    Real3 pos = S_end.pos();
-    double x_dist = pos.x;
-    double y_dist = pos.y;
+    VReal3 pos = S_end.pos();  // Come prendo la posizione? Devo conoscere il
+                               // numero di parametri spaziali
+    double x_dist = pos[0];
+    double y_dist = pos[1];
     double d = sqrt(pow(x_dist, 2) + pow(y_dist, 2));
 
     // Get decimal representation in GPS coordinates

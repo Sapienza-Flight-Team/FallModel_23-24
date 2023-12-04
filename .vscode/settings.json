@@ -67,6 +67,9 @@
         "thread": "cpp",
         "cinttypes": "cpp",
         "typeinfo": "cpp",
-        "codecvt": "cpp"
-    }
+        "codecvt": "cpp",
+        "map": "cpp",
+        "set": "cpp"
+    },
+    "C_Cpp.default.compilerPath": "/usr/sbin/g++"
 }

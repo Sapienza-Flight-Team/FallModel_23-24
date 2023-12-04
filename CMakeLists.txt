@@ -13,6 +13,7 @@ endif()
 # Find the Boost package
 find_package(Boost REQUIRED)
 
+
 set(INC_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/include
 )
@@ -22,23 +23,52 @@ set(SRC_DIR
 )
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-unused-parameter")
 set(SFT_SOURCES
-    ${SRC_DIR}/BallisticModel.cpp
-    ${SRC_DIR}/Simulation.cpp
+   
     ${SRC_DIR}/Waypoint.cpp
     ${SRC_DIR}/main.cpp
 )
+
 
 set(SFT_HEADERS
     ${INC_DIR}/Model.h
     ${INC_DIR}/BallisticModel.h
     ${INC_DIR}/PayChute.h
-    ${INC_DIR}/Real3.h
+    ${INC_DIR}/VReal.h
     ${INC_DIR}/Settings.h
     ${INC_DIR}/Simulation.h
     ${INC_DIR}/State.h
     ${INC_DIR}/Wind.h
     ${INC_DIR}/Waypoint.h
+    ${INC_DIR}/BaseStepper.h
 )
+
+
+set(CMAKE_CXX_FLAGS_PROFILING "-O2 -g -pg" CACHE STRING
+    "Flags used by the C++ compiler during Profiling builds."
+    FORCE )
+set(CMAKE_C_FLAGS_PROFILING "-O2 -g -pg" CACHE STRING
+    "Flags used by the C compiler during Profiling builds."
+    FORCE )
+set(CMAKE_EXE_LINKER_FLAGS_PROFILING
+    "-pg" CACHE STRING
+    "Flags used for linking binaries during Profiling builds."
+    FORCE )
+set(CMAKE_SHARED_LINKER_FLAGS_PROFILING
+    "-pg" CACHE STRING
+    "Flags used by the shared libraries linker during Profiling builds."
+    FORCE )
+mark_as_advanced(
+    CMAKE_CXX_FLAGS_PROFILING
+    CMAKE_C_FLAGS_PROFILING
+    CMAKE_EXE_LINKER_FLAGS_PROFILING
+    CMAKE_SHARED_LINKER_FLAGS_PROFILING
+)
+
+# Update the documentation string of CMAKE_BUILD_TYPE for GUIs
+set(CMAKE_BUILD_TYPE "${CMAKE_BUILD_TYPE}" CACHE STRING
+    "Choose the type of build, options are: None Debug Release RelWithDebInfo MinSizeRel Profiling."
+    FORCE )
+    
 
 add_executable(
     ${PROJECT_NAME}
@@ -65,4 +95,12 @@ target_include_directories(
     ${PROJECT_NAME}
     PRIVATE
     ${INC_DIR}
+)
+
+# embed STL in executable
+target_link_options(
+    ${PROJECT_NAME}
+    PRIVATE
+    -static-libgcc
+    -static-libstdc++
 )
