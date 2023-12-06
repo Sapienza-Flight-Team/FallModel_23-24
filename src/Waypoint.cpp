@@ -73,16 +73,18 @@ GPS translate_gps(const GPS &gps, double d, double head, bool rad) {
  * @return The GPS coordinates of the drop point.
  */
 template <size_t N>
-GPS get_drop(State<N> S_end, const GPS &gps_target, double heading) {
+GPS get_drop(State<N> S_end, const GPS &gps_target) {
     GPS gps_drop;
     double R_E = 6378100;                    // Earth radius (m)
-    double head_rad = heading * M_PI / 180;  // Convert heading to rad
+   
 
     VReal3 pos = S_end.pos();  // Come prendo la posizione? Devo conoscere il
                                // numero di parametri spaziali
-    double x_dist = pos[0];
-    double y_dist = pos[1];
-    double d = sqrt(pow(x_dist, 2) + pow(y_dist, 2));
+    double x = pos[0];
+    double y = pos[1];
+    double d = sqrt(pow(x, 2) + pow(y, 2));
+
+    double head_rad = atan2(y, x);  // Get heading in rad
 
     // Get decimal representation in GPS coordinates
 

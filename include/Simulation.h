@@ -66,7 +66,6 @@ struct Results {
     std::vector<std::span<State<N>>> results_view;
 
    public:
-    
     Results() : results(nullptr) {}
     Results(State<N>* res, std::span<State<N>> res_span) : results(res) {
         results_view.push_back(res_span);
@@ -94,9 +93,13 @@ struct Results {
         }
     }
 
-    State<N> getLast() {
+    State<N> getLast(size_t idx = 0) {
         if (results) {
-            return results_view.back().back();
+            if (results_view.size() >= idx) {
+                return results_view[idx].back();
+            } else {
+                throw std::runtime_error("Index out of range");
+            }
         } else {
             throw std::runtime_error("Results not initialized");
         }

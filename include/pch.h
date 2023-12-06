@@ -6,3 +6,4 @@
 #include "Simulation.h"
 #include "State.h"
 #include "Wind.h"
+#include "Waypoint.h"
