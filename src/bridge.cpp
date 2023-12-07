@@ -1,17 +1,59 @@
-
 #include "../include/pch.h"
+#include <string>
+
+/**
+ * Calculates the GPS coordinates of a drop point given the current state,
+ * target GPS coordinates and heading.
+ * @param S_end The last state of the payload simulation.
+ * @param gps_target The ground target GPS coordinates.
+ * @param heading The heading of the aircraft in degrees.
+ * @return The GPS coordinates of the drop point.
+ */
+template <size_t N>
+GPS get_drop(const State<N> S_end, const GPS &gps_target) {
+    GPS gps_drop;
+    double R_E = 6378100;                    // Earth radius (m)
+
+    VReal3 pos = S_end.X();  // Come prendo la posizione? Devo conoscere il
+                               // numero di parametri spaziali
+    double x = pos[0];
+    double y = pos[1];
+    double d = sqrt(pow(x, 2) + pow(y, 2));
+
+    double head_rad = atan2(y, x);  // Get heading in rad
+
+    // Get decimal representation in GPS coordinates
+
+    double targ_lat = gps_target.lat * M_PI / 180;
+    double targ_lon = gps_target.lon * M_PI / 180;
+
+    // Compute gps_drop
+    gps_drop.lat = asin(sin(targ_lat) * cos(d / R_E)) +
+                   cos(targ_lat) * sin(d / R_E) * cos(head_rad);
+    gps_drop.lon =
+        targ_lon +
+        atan2(sin(head_rad) * sin(d / R_E) * cos(gps_target.lat),
+              cos(d / R_E) - sin(gps_target.lat) * sin(gps_drop.lat));
+
+    // Convert gps_drop to degree
+    gps_drop.lat = gps_drop.lat * 180 / M_PI;
+    gps_drop.lon = gps_drop.lon * 180 / M_PI;
+    return gps_drop;
+}
+
+
 /**
  * @brief initialize and run the model
  *
  * @param size       : num of launches
- * @param wind       : {wind[2*i+0], wind[2*i+1]} is {degree, m/s} of the wind
+ * @param wind       : {wind[2*i+0], wind[2*i+1]} is {rad, m/s} of the wind
  * (remind: 0° = the wind go to Sud from North)
  * @param vel        : {vel[3*i+0], vel[3*i+1], vel[3*i+2]} is {heading,
  * magnitude, v_down} of the UAV velocity
  * @param target     : {target[2*i+0], target[2*i+1]} is the GPS position of the
  * target
  * @param h          : h[i] is the altitude (m)
- * @param m          : m[i] is the mass of the payload (Kg)
+ * @param m          : m[i] is the mass of the payload (kg)
  * @param CdS        : is the coefficient of the parachute (m2)
  * @param time       : time of the simulation (s)
  * @param step       : step of the simulation (s)
@@ -23,8 +65,6 @@
 int cxx_run(int size, double* wind, double* vel, double* target, double* h,
             double* m, double CdS, double time, double step,
             const char* integrator, double* result) {
-#include <string>
-
     std::string integrator_i = integrator;
     Simulation s(step, time, integrator_i);
 
@@ -84,7 +124,7 @@ int cxx_run(int size, double* wind, double* vel, double* target, double* h,
         State<3> S_end = res.getLast();
 
         // Get the drop point
-        GPS gps_drop = get_drop(S_end, gps_target);
+        GPS gps_drop = get_drop<3>(S_end, gps_target);
 
         result[2 * i + 0] = gps_drop.lat;
         result[2 * i + 1] = gps_drop.lon;
@@ -110,7 +150,7 @@ static PyObject* run(PyObject* self, PyObject* args) {
         *target,    /* GPS target position: [latitude, longitude]        */
         *h,         /* altitude of UAV (in m)                            */
         *m;         /* Mass of payloads (in g)                           */
-    double CdS;     /* CdS coefficient of parachutes  */
+    float CdS;      /* CdS coefficient of parachutes  */
     int time,       /* Time of the simulation (in s)  */
         step;       /* Step of the simulation (in ms) */
     const char* integrator; /* integrator */

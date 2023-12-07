@@ -1,3 +1,4 @@
+#include "Waypoint.h"
 #include "BallisticModel.h"
 #include "Model.h"
 #include "PayChute.h"
@@ -6,4 +7,3 @@
 #include "Simulation.h"
 #include "State.h"
 #include "Wind.h"
-#include "Waypoint.h"

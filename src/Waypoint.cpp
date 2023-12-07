@@ -72,13 +72,14 @@ GPS translate_gps(const GPS &gps, double d, double head, bool rad) {
  * @param heading The heading of the aircraft in degrees.
  * @return The GPS coordinates of the drop point.
  */
+ /*
 template <size_t N>
-GPS get_drop(State<N> S_end, const GPS &gps_target) {
+GPS get_drop(const State<N> S_end, const GPS &gps_target) {
     GPS gps_drop;
     double R_E = 6378100;                    // Earth radius (m)
    
 
-    VReal3 pos = S_end.pos();  // Come prendo la posizione? Devo conoscere il
+    VReal3 pos = S_end.X();  // Come prendo la posizione? Devo conoscere il
                                // numero di parametri spaziali
     double x = pos[0];
     double y = pos[1];
@@ -104,6 +105,7 @@ GPS get_drop(State<N> S_end, const GPS &gps_target) {
     gps_drop.lon = gps_drop.lon * 180 / M_PI;
     return gps_drop;
 }
+*/
 
 /**
  * Calculates a vector of three GPS coordinates that form a straight line at a

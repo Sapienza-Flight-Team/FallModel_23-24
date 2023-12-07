@@ -3,4 +3,8 @@ bin/
 build/
 test/
 CMakeFiles/
+.venv/
+.cache/
+.clang_format
 libsft_fall_model.so
+
