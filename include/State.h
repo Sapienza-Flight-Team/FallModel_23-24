@@ -46,7 +46,7 @@ class State : public VReal<2 * N> {
 
     State(const double val) : State<N>({val}) {}
 
-    State(const State& other) : State<N>(other.v) {}  // copy constructor
+    State(const State& other) : State<N>(other.v) {t = other.t}  // copy constructor
 
     State(const VReal<2 * N>& other) {
         // Copy the values from arr into this object's data

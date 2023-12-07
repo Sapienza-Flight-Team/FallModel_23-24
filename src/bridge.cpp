@@ -96,7 +96,7 @@ int cxx_run(int size, double* wind, double* vel, double* target, double* h,
         std::function<double(const State<3>&, double)> cds_payload =
             [CdS](const State<3>& s, double t) {
                 if (t <= 1) {
-                    return CdS * cos(3 * t);
+                    return CdS * (1- cos(3 * t));
                 } else {
                     return CdS;
                 }
