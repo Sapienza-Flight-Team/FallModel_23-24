@@ -52,7 +52,7 @@ static double atm(double h) {
     if (h < 0) {
         return 0;
     } else {
-        return rho0 * exp(std::pow(10, -4) * h);
+        return rho0 * exp(-std::pow(10, -4) * h);
     }
 }
 
@@ -73,6 +73,7 @@ void BallisticModel::operator()(const State<3>& state, State<3>& state_dot,
     double wind_rel_vel_mod = wind_rel_vel.mod();
 
     state_dot[0] = vel[0];
+
     state_dot[1] = vel[1];
     state_dot[2] = vel[2];
 

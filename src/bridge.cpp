@@ -16,10 +16,10 @@ GPS get_drop(const State<N> S_end, const GPS &gps_target) {
 
     VReal3 pos = S_end.X();  // Come prendo la posizione? Devo conoscere il
                                // numero di parametri spaziali
-    double x = pos[0];
-    double y = pos[1];
+    double x = -pos[0];
+    double y = -pos[1];
+/*
     double d = sqrt(pow(x, 2) + pow(y, 2));
-
     double head_rad = atan2(y, x);  // Get heading in rad
 
     // Get decimal representation in GPS coordinates
@@ -28,8 +28,8 @@ GPS get_drop(const State<N> S_end, const GPS &gps_target) {
     double targ_lon = gps_target.lon * M_PI / 180;
 
     // Compute gps_drop
-    gps_drop.lat = asin(sin(targ_lat) * cos(d / R_E)) +
-                   cos(targ_lat) * sin(d / R_E) * cos(head_rad);
+    gps_drop.lat = asin(sin(targ_lat) * cos(d / R_E) +
+                   cos(targ_lat) * sin(d / R_E) * cos(head_rad));
     gps_drop.lon =
         targ_lon +
         atan2(sin(head_rad) * sin(d / R_E) * cos(gps_target.lat),
@@ -38,6 +38,9 @@ GPS get_drop(const State<N> S_end, const GPS &gps_target) {
     // Convert gps_drop to degree
     gps_drop.lat = gps_drop.lat * 180 / M_PI;
     gps_drop.lon = gps_drop.lon * 180 / M_PI;
+*/
+    gps_drop.lat = gps_target.lat + x * 180 / (M_PI * R_E);
+    gps_drop.lon = gps_target.lon + y * 180 / (M_PI * R_E);
     return gps_drop;
 }
 
