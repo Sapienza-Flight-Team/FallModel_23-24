@@ -209,12 +209,12 @@ int cxx_trajectories(int size, double* wind, double* vel, double* target, double
         Results<3> res = s.run(bm, S0);
 
         // Alloc memory
-        lengths[i] = (int)res.getSSize();
+        lengths[i] = res[0].size();
         result[i] = (double*)malloc(lengths[i] * 7 * sizeof(double));
         if (!result[i]) return 1;
 
         for (int k = 0; k < lengths[i]; ++k) {
-            State<3> S = res.getLast(lengths[i] - k);
+            State<3> S = res[0][k];
             result[i][7 * k + 0] = S.X()[0];
             result[i][7 * k + 1] = S.X()[1];
             result[i][7 * k + 2] = S.X()[2];

@@ -10,6 +10,17 @@ from geopy.distance import geodesic
 file_name = "test2.csv"
 empirical_data = pd.read_csv(file_name, sep='\s+')
 
+def get_trajectories(CdS, data):
+    # convert data in list
+    altitude = data['H'].tolist()
+    mass = data['mass'].tolist()
+    target = list(zip(data['Lat_land'], data['Long_land']))
+    vel = list(zip(data['Head'], data['Vel'], data['V_down']))
+    wind = data['wind'].tolist()
+    return trajectories(wind, vel, target, altitude, mass, CdS, 10, 2, 'rk4')
+
+solutions = get_trajectories(0.85*0.4*0.4, empirical_data)
+print(solutions)
 """
 # algorithm
 def cost(CdS, data):
