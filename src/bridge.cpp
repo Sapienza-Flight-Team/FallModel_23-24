@@ -18,29 +18,10 @@ GPS get_drop(const State<N> S_end, const GPS &gps_target) {
                                // numero di parametri spaziali
     double x = -pos[0];
     double y = -pos[1];
-/*
-    double d = sqrt(pow(x, 2) + pow(y, 2));
-    double head_rad = atan2(y, x);  // Get heading in rad
 
-    // Get decimal representation in GPS coordinates
+    gps_drop.lat = gps_target.lat + x / R_E * 180 / M_PI;
+    gps_drop.lon = gps_target.lon + y / (R_E * cos(gps_target.lat * M_PI / 180)) * 180 / M_PI;
 
-    double targ_lat = gps_target.lat * M_PI / 180;
-    double targ_lon = gps_target.lon * M_PI / 180;
-
-    // Compute gps_drop
-    gps_drop.lat = asin(sin(targ_lat) * cos(d / R_E) +
-                   cos(targ_lat) * sin(d / R_E) * cos(head_rad));
-    gps_drop.lon =
-        targ_lon +
-        atan2(sin(head_rad) * sin(d / R_E) * cos(gps_target.lat),
-              cos(d / R_E) - sin(gps_target.lat) * sin(gps_drop.lat));
-
-    // Convert gps_drop to degree
-    gps_drop.lat = gps_drop.lat * 180 / M_PI;
-    gps_drop.lon = gps_drop.lon * 180 / M_PI;
-*/
-    gps_drop.lat = gps_target.lat + x * 180 / (M_PI * R_E);
-    gps_drop.lon = gps_target.lon + y * 180 / (M_PI * R_E);
     return gps_drop;
 }
 
@@ -95,7 +76,7 @@ int cxx_dropPoints(int size, double* wind, double* vel, double* target, double* 
         std::function<double(const State<3>&, double)> cds_payload =
             [CdS](const State<3>& s, double t) {
                 if (t <= 1) {
-                    return CdS * (1- cos(3 * t));
+                    return 0.0;
                 } else {
                     return CdS;
                 }
@@ -184,7 +165,7 @@ int cxx_trajectories(int size, double* wind, double* vel, double* target, double
         std::function<double(const State<3>&, double)> cds_payload =
             [CdS](const State<3>& s, double t) {
                 if (t <= 1) {
-                    return CdS * (1- cos(3 * t));
+                    return 0.0;
                 } else {
                     return CdS;
                 }
@@ -465,10 +446,10 @@ static PyObject* trajectories(PyObject* self, PyObject* args) {
             if (!item_state) return NULL;
             PyTuple_SET_ITEM(item_state, 0, PyFloat_FromDouble(result[i][7 * k + 0]));
             PyTuple_SET_ITEM(item_state, 1, PyFloat_FromDouble(result[i][7 * k + 1]));
-            PyTuple_SET_ITEM(item_state, 2, PyFloat_FromDouble(result[i][7 * k + 2]));
+            PyTuple_SET_ITEM(item_state, 2, PyFloat_FromDouble(-result[i][7 * k + 2]));
             PyTuple_SET_ITEM(item_state, 3, PyFloat_FromDouble(result[i][7 * k + 3]));
             PyTuple_SET_ITEM(item_state, 4, PyFloat_FromDouble(result[i][7 * k + 4]));
-            PyTuple_SET_ITEM(item_state, 5, PyFloat_FromDouble(result[i][7 * k + 5]));
+            PyTuple_SET_ITEM(item_state, 5, PyFloat_FromDouble(-result[i][7 * k + 5]));
             PyTuple_SET_ITEM(item_state, 6, PyFloat_FromDouble(result[i][7 * k + 6]));
             PyTuple_SET_ITEM(item_result, k, item_state);
         }
