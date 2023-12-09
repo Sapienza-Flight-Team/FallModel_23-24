@@ -1,5 +1,4 @@
 #include "../include/pch.h"
-#include "object.h"
 #include <string>
 
 /**
@@ -147,7 +146,7 @@ extern "C" {
 
 #define KT2M 0.541 /* 1 knot = 0.541 m/s */
 
-static PyObject* dropPoints(PyObject* self, PyObject* args) {
+static PyObject* run(PyObject* self, PyObject* args) {
     /* params of run */
     PyObject *wind, /* describe the wind:   '{degree}{nodes}KT'          */
         *vel,       /* velocity of UAV:   [radians, magnitude, v_down]   */
@@ -264,12 +263,8 @@ static PyObject* dropPoints(PyObject* self, PyObject* args) {
     return Py_BuildValue("O", resultObj);
 }
 
-static PyObject trajectories(PyObject* self, PyObject* args) {
-}
-
 static PyMethodDef module_methods[] = {
-    {"dropPoints", dropPoints, METH_VARARGS, "Ritorna i punti di drop in coordinate GPS."},
-    {"trajectories", trajectories, METH_VARARGS, "Ritorna le traiettorie in coordinate NED."},
+    {"run", run, METH_VARARGS, "Esegue il programma principale."},
     {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef libsft_fall_modelModule = {
