@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import libsft_fall_model as ad
+from libsft_fall_model import dropPoints, trajectories
 import numpy as np
 from scipy.optimize import minimize
 import pandas as pd
@@ -18,7 +18,7 @@ def cost(CdS, data):
     target = list(zip(data['Lat_land'], data['Long_land']))
     vel = list(zip(data['Head'], data['Vel'], data['V_down']))
     wind = data['wind'].tolist()
-    res = ad.run(wind, vel, target, altitude, mass, CdS, 10, 2, 'rk4')
+    res = dropPoints(wind, vel, target, altitude, mass, CdS, 10, 2, 'rk4')
     # compute loss
     sum = 0
     for launch in range(len(res)):
