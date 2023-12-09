@@ -10,6 +10,7 @@ from geopy.distance import geodesic
 file_name = "test2.csv"
 empirical_data = pd.read_csv(file_name, sep='\s+')
 
+"""
 # algorithm
 def cost(CdS, data):
     # convert data in list
@@ -38,3 +39,4 @@ loss_optimized = result.fun
 
 print(f"CdS ottimizzato: {CdS_optimized}")
 print(f"Perdita minima: {loss_optimized}")
+"""
