@@ -82,10 +82,7 @@ struct Results {
                 throw std::out_of_range("Index out of range");
             }
 
-            if (results_view.size() == 1) {
-                return results_view[0][i];  // Sintax results[i] to
-                                            // access results if single model
-            }
+          
             return results_view[i];  // Sintax results[i][j] to access results
 
         } else {
