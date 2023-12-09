@@ -1,39 +1,26 @@
 #pragma once
 
-#include "Real3.h"
 #include "State.h"
+#include "VReal.h"
 
+// This file should inherit template parameters from BallisticModel.h
+
+template <size_t N>
 class PayChute {
    public:
     PayChute(
         // PayLoad data
+        std::function<double(const State<N>&, const double)> cds, double mass)
+        : pl_cds(cds), pl_mass(mass) {}
 
-        // ParaChute data
-        double (*pl_cd)(State, Real3, double),
-        double (*pl_surface)(State, Real3, double), double pl_mass)
-
-        : load({pl_cd, pl_surface, pl_mass})
-
-    {
-        total_mass = pl_mass;
-    }
-
-    PayChute(const PayChute& other)
-        : load(other.load), total_mass(other.total_mass) {}
     ~PayChute() {}
 
-    double Cd_S(State state, Real3 Vw, double t) {
-        return (load.cd(state, Vw, t) * load.sur(state, Vw, t));
+    double CdS(const State<N>& state, const double t) {
+        return this->pl_cds(state, t);
     }
-    double mass() { return total_mass; }
+    double mass() { return this->pl_mass; }
 
    private:
-    struct {
-        double (*cd)(State, Real3, double);  // Pointer to function defining Cd
-        double (*sur)(State, Real3,
-                      double);  // Pointer to function defining Surface
-        double mass;
-    } load;
-
-    double total_mass = 0;
+    std::function<double(const State<N>&, const double)> pl_cds;
+    double pl_mass;  // Payload mass
 };

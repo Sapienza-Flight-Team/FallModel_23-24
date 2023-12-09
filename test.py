@@ -29,7 +29,7 @@ def cost(CdS, data):
     loss = (sum/len(res))**0.5
     return loss
 
-CdS_initial_guess = 2
+CdS_initial_guess = 0.85*0.4*0.4
 CdS_bounds = (0.001, None)
 result = minimize(cost, CdS_initial_guess, args=(empirical_data,), method='Nelder-Mead', bounds=[CdS_bounds])
 

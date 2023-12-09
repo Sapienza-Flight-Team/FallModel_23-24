@@ -19,8 +19,7 @@ set(INC_DIR
 )
 
 set(SFT_SOURCES
-    ${SRC_DIR}/BallisticModel.cpp
-    ${SRC_DIR}/Simulation.cpp
+
     ${SRC_DIR}/Waypoint.cpp
     ${SRC_DIR}/bridge.cpp
 )

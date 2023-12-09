@@ -7,14 +7,23 @@
  * @brief Virtual class representing a dynamical model
  *
  */
-using ConFun = std::function<bool((State S0, State S0_dot, double t))>;
+template <size_t N>
+using ConFun =
+    std::function<bool(const State<N>& S0, State<N>& S0_dot, double t)>;
 
+template <size_t N>
 class Model {
+   private:
    public:
     Model() {}
-    Model(ConFun fi) : conditionFunc(fi) {}
-    virtual void operator()(State S0, State& Sdot, double t) = 0;
+    Model(ConFun<N> fi) : conditionFunc(fi) {}
+
+    // ODE function
+    virtual void operator()(const State<N>& S0, State<N>& S0_dot, double t) = 0;
+
+    static constexpr size_t getN() { return N; }
+
     virtual ~Model() {}
 
-    ConFun conditionFunc = nullptr;
+    ConFun<N> conditionFunc = nullptr;
 };

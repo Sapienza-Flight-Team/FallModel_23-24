@@ -3,3 +3,4 @@
 bin/
 build/
 .cache/
+libsft_fall_model.so
