@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <boost/numeric/odeint.hpp>
 #include <boost/operators.hpp>
@@ -14,7 +15,7 @@ class VReal : boost::additive1<
                   boost::additive2<VReal<N>, double,
                       boost::multiplicative2<VReal<N>, double>>> {
 protected:
-    std::array<double, N> v;
+    std::array<double, N> v {};
 
 public:
     // Constructors
@@ -167,6 +168,16 @@ public:
         return res;
     }
 
+    constexpr auto begin() const noexcept -> typename std::array<double, N>::const_iterator
+    {
+        return v.begin();
+    }
+
+    constexpr auto end() const noexcept -> typename std::array<double, N>::const_iterator
+    {
+        return v.end();
+    }
+
     auto operator/(const VReal& other) -> VReal
     {
         VReal<N> res;
@@ -232,11 +243,8 @@ public:
 
     auto mod() -> double
     {
-        double res = 0;
-        for (size_t i = 0; i < N; i++) {
-            res += v[i] * v[i];
-        }
-        return std::sqrt(res);
+        const auto norm = std::inner_product(v.begin(), v.end(), v.begin(), 0.0);
+        return std::sqrt(norm);
     }
 
     auto operator[](size_t i) -> double&

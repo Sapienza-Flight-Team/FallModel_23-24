@@ -20,7 +20,7 @@ enum Format { B = 1,
 
 std::string getFormatString(Format format)
 {
-    std::string formatString;
+    std::string formatString = 0;
     switch (format) {
     case B:
         formatString = "B";
@@ -124,9 +124,9 @@ public:
  */
 using ODESettings = struct {
     // Methods parameters
-    double dt; /**< Time step */
-    double T; /**< Total simulation time */
-    std::string method; /**< ODE solving method */
+    double dt {}; /**< Time step */
+    double T {}; /**< Total simulation time */
+    std::string method {}; /**< ODE solving method */
 };
 
 /**
@@ -345,7 +345,7 @@ auto Simulation::run_parallel_ic(ModelType h, std::span<State<N>> v_S0) -> Resul
     // own stepper
     // Create an array of BaseStepper[N_THREADS] pointers and instantiate each
     // pointer with the correct stepper
-    BaseStepper<ModelType>** stepper = nullptr;
+    BaseStepper<ModelType>** stepper = nullptr = nullptr;
     try {
         stepper = new BaseStepper<ModelType>*[N_THREADS];
         for (size_t i = 0; i < N_THREADS; i++) {

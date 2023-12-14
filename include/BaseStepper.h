@@ -5,6 +5,7 @@
 #include "State.h"
 
 namespace odeint = boost::numeric::odeint;
+
 template <typename ModelType, size_t N = ModelType::getN()>
 class BaseStepper {
 public:
@@ -17,6 +18,11 @@ public:
 
 template <typename ModelType, size_t N = ModelType::getN()>
 class RK4Stepper : public BaseStepper<ModelType> {
+private:
+    using rk4_stepper_t = odeint::runge_kutta4<State<N>, double, State<N>,
+        double, odeint::vector_space_algebra>;
+    rk4_stepper_t stepper {};
+
 public:
     RK4Stepper() = default;
     ~RK4Stepper() = default;
@@ -26,15 +32,16 @@ public:
     {
         stepper.do_step(model, in, t, out, dt);
     }
-
-private:
-    odeint::runge_kutta4<State<N>, double, State<N>, double,
-        odeint::vector_space_algebra>
-        stepper;
 };
 
 template <typename ModelType, size_t N = ModelType::getN()>
 class RK45Stepper : public BaseStepper<ModelType> {
+
+private:
+    using runge_kutta_cash_karp54 = odeint::runge_kutta_cash_karp54<State<N>, double,
+        State<N>, double, odeint::vector_space_algebra>;
+    runge_kutta_cash_karp54 stepper {};
+
 public:
     RK45Stepper() = default;
     ~RK45Stepper() = default;
@@ -44,15 +51,16 @@ public:
     {
         stepper.do_step(model, in, t, out, dt);
     }
-
-private:
-    odeint::runge_kutta_dopri5<State<N>, double, State<N>, double,
-        odeint::vector_space_algebra>
-        stepper;
 };
 
 template <typename ModelType, size_t N = ModelType::getN()>
 class EulerStepper : public BaseStepper<ModelType> {
+private:
+    using euler_stepper_t = odeint::euler<State<N>, double, State<N>, double,
+        odeint::vector_space_algebra>;
+
+    euler_stepper_t stepper {};
+
 public:
     EulerStepper() = default;
     ~EulerStepper() = default;
@@ -61,9 +69,4 @@ public:
     {
         stepper.do_step(model, in, t, out, dt);
     }
-
-private:
-    odeint::euler<State<N>, double, State<N>, double,
-        odeint::vector_space_algebra>
-        stepper;
 };

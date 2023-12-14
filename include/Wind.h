@@ -38,5 +38,5 @@ public:
 
 private:
     // This function takes position and time, and returns the wind velocity
-    std::function<VReal3(const State<N>& s, const VReal3& x, double)> wind_law;
+    std::function<VReal3(const State<N>& s, const VReal3& x, double)> wind_law{};
 };

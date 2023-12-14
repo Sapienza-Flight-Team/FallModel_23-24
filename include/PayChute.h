@@ -24,6 +24,6 @@ public:
     auto mass() -> double { return this->pl_mass; }
 
 private:
-    std::function<double(const State<N>&, const double)> pl_cds; // Coefficient of drag
+    std::function<double(const State<N>&, const double)> pl_cds{}; // Coefficient of drag
     double pl_mass; // Payload mass
 };

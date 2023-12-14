@@ -15,12 +15,12 @@ template <size_t N>
 auto get_drop(const State<N> S_end, const GPS& gps_target) -> GPS
 {
     GPS gps_drop;
-    double R_E = 6378100; // Earth radius (m)
+    double const R_E = 6378100; // Earth radius (m)
 
     VReal3 pos = S_end.X(); // Come prendo la posizione? Devo conoscere il
                             // numero di parametri spaziali
-    double x = -pos[0];
-    double y = -pos[1];
+    double const x = -pos[0];
+    double const y = -pos[1];
     /*
         double d = sqrt(pow(x, 2) + pow(y, 2));
         double head_rad = atan2(y, x);  // Get heading in rad
@@ -71,35 +71,34 @@ auto cxx_run(int size, double* wind, double* vel, double* target, double* h,
     double* m, double CdS, double time, double step,
     const char* integrator, double* result) -> int
 {
-    std::string integrator_i = integrator;
+    std::string const integrator_i = integrator;
     Simulation s(step, time, integrator_i);
 
     for (int i = 0; i < size; i++) {
-        double wind_head = wind[2 * i + 0];
-        double wind_speed = wind[2 * i + 1];
+        double const wind_head = wind[2 * i + 0];
+        double const wind_speed = wind[2 * i + 1];
 
-        double vel_head = vel[3 * i + 0];
-        double vel_speed = vel[3 * i + 1];
-        double vel_down = vel[3 * i + 2];
+        double const vel_head = vel[3 * i + 0];
+        double const vel_speed = vel[3 * i + 1];
+        double const vel_down = vel[3 * i + 2];
 
-        double target_lat = target[2 * i + 0];
-        double target_lon = target[2 * i + 1];
+        double const target_lat = target[2 * i + 0];
+        double const target_lon = target[2 * i + 1];
 
-        double h_i = h[i];
+        double const h_i = h[i];
 
-        double mass_i = m[i];
+        double const mass_i = m[i];
 
-        GPS gps_target = { target_lat, target_lon };
+        GPS const gps_target = { target_lat, target_lon };
 
         // Wind law
-        std::function<VReal3(const State<3>&, const VReal<3>&, double)>
-            wind_law = [wind_head, wind_speed]([[maybe_unused]] const State<3>& state,
-                           [[maybe_unused]] const VReal<3>& pos, [[maybe_unused]] double t) {
-                return VReal<3> { wind_speed * cos(wind_head),
-                    wind_speed * sin(wind_head), 0 };
-            };
+        std::function<VReal3(const State<3>&, const VReal<3>&, double)> const wind_law = [wind_head, wind_speed]([[maybe_unused]] const State<3>& state,
+                                                                                             [[maybe_unused]] const VReal<3>& pos, [[maybe_unused]] double t) {
+            return VReal<3> { wind_speed * cos(wind_head),
+                wind_speed * sin(wind_head), 0 };
+        };
         // CdS
-        std::function<double(const State<3>&, double)> cds_payload =
+        std::function<double(const State<3>&, double)> const cds_payload =
             [CdS]([[maybe_unused]] const State<3>& s, [[maybe_unused]] double t) {
                 if (t <= 1) {
                     return CdS * (1 - cos(3 * t));
@@ -109,14 +108,14 @@ auto cxx_run(int size, double* wind, double* vel, double* target, double* h,
             };
 
         // Create the paychute and wind
-        PayChute<3> pc(cds_payload, mass_i);
-        Wind<3> Vw(wind_law);
+        PayChute<3> const pc(cds_payload, mass_i);
+        Wind<3> const Vw(wind_law);
 
         // Create the ballistic model
         BallisticModel bm(pc, Vw);
         // Create simulation object
 
-        State<3> S0 = { 0,
+        State<3> const S0 = { 0,
             0,
             -h_i,
             vel_speed * cos(vel_head),
@@ -130,7 +129,7 @@ auto cxx_run(int size, double* wind, double* vel, double* target, double* h,
         State<3> S_end = res.getLast();
 
         // Get the drop point
-        GPS gps_drop = get_drop<3>(S_end, gps_target);
+        GPS const gps_drop = get_drop<3>(S_end, gps_target);
 
         result[2 * i + 0] = gps_drop.lat;
         result[2 * i + 1] = gps_drop.lon;
@@ -145,6 +144,7 @@ auto cxx_run(int size, double* wind, double* vel, double* target, double* h,
 extern "C" {
 #endif /*defined(__cplusplus)*/
 
+#include <math.h>
 #include <stdio.h>
 
 #define KT2M 0.541 /* 1 knot = 0.541 m/s */
@@ -152,15 +152,15 @@ extern "C" {
 static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
 {
     /* params of run */
-    PyObject *wind, /* describe the wind:   '{degree}{nodes}KT'          */
-        *vel, /* velocity of UAV:   [radians, magnitude, v_down]   */
-        *target, /* GPS target position: [latitude, longitude]        */
-        *h, /* altitude of UAV (in m)                            */
-        *m; /* Mass of payloads (in g)                           */
-    float CdS; /* CdS coefficient of parachutes  */
-    int time, /* Time of the simulation (in s)  */
-        step; /* Step of the simulation (in ms) */
-    const char* integrator; /* integrator */
+    PyObject *wind = nullptr, /* describe the wind:   '{degree}{nodes}KT'          */
+        *vel = nullptr, /* velocity of UAV:   [radians, magnitude, v_down]   */
+            *target = nullptr, /* GPS target position: [latitude, longitude]        */
+                *h = nullptr, /* altitude of UAV (in m)                            */
+                    *m = nullptr; /* Mass of payloads (in g)                           */
+    float CdS = 0.F; /* CdS coefficient of parachutes  */
+    int time = 0, /* Time of the simulation (in s)  */
+        step = 0; /* Step of the simulation (in ms) */
+    const char* integrator = nullptr; /* integrator */
 
     if (!PyArg_ParseTuple(args, "OOOOOfiis", &wind, &vel, &target, &h, &m, &CdS,
             &time, &step, &integrator)) {
@@ -219,8 +219,8 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
                  *item_vel = PyList_GET_ITEM(vel, i),
                  *item_target = PyList_GET_ITEM(target, i);
         {
-            int angle_grad;
-            int speed_knots;
+            int angle_grad = 0;
+            int speed_knots = 0;
             const char* str = PyUnicode_AsUTF8(item_wind);
             sscanf(str, "%3d%2dKT", &angle_grad, &speed_knots);
             c_wind[2 * i] = angle_grad * M_PI / 180.0;
@@ -249,7 +249,7 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
     if (result == nullptr) {
         return nullptr;
     }
-    int ret = cxx_run((int)size, c_wind.get(), c_vel.get(), c_target.get(), c_h.get(), c_m.get(), CdS, time,
+    int const ret = cxx_run((int)size, c_wind.get(), c_vel.get(), c_target.get(), c_h.get(), c_m.get(), CdS, time,
         step / 1000., integrator, result.get());
     if (ret != 0) {
         return nullptr;

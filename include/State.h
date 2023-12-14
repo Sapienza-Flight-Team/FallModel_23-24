@@ -1,11 +1,11 @@
 #pragma once
 
+#include "VReal.h"
+#include <algorithm>
 #include <boost/numeric/odeint.hpp>
 #include <boost/operators.hpp>
 #include <cmath>
 #include <iostream>
-
-#include "VReal.h"
 
 /**
  * @brief Multi-dimensional state vector
@@ -51,18 +51,16 @@ public:
     }
 
     State(const State& other)
-        : State<N>(other.v)
+        : VReal<2 * N>(other.v)
+        , t(other.t)
     {
-        t = other.t;
+
     } // copy constructor
 
     State(const VReal<2 * N>& other)
     {
         // Copy the values from arr into this object's data
-        for (size_t i = 0; i < 2 * N; i++) {
-            this->v = other.data();
-        }
-
+        std::copy(other.begin(), other.end(), this->v.begin());
     } // copy constructor
     State(State&& other) noexcept
     {
@@ -96,17 +94,17 @@ public:
         return *this;
     }
 
-    auto operator()(const double _t) -> State&
+    [[nodiscard]] auto operator()(const double _t) -> State&
     {
         t = _t;
         return *this;
     }
 
-    auto X() const -> VReal<N>
+    [[nodiscard]] auto X() const -> VReal<N>
     {
         return VReal<N>(this->v.begin(), this->v.begin() + N);
     }
-    auto X_dot() const -> VReal<N>
+    [[nodiscard]] auto X_dot() const -> VReal<N>
     {
         return VReal<N>(this->v.begin() + N, this->v.end());
     }
@@ -116,7 +114,7 @@ public:
     }
     friend std::ostream& operator<<(std::ostream& out, const State& p)
     {
-        out << p.X() << "," << p.X_dot() << ",t=" << p.t;
+        out << p.X() << "," << p.X_dot() << ", t=" << p.t;
         return out;
     }
 };

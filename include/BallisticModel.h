@@ -4,10 +4,12 @@
 #include <utility>
 
 #include "Model.h"
+
 #include "PayChute.h"
 #include "State.h"
 #include "VReal.h"
 #include "Wind.h"
+#include <math.h>
 
 static const double rho0 = 1.2250; // kg/m^3
 static const double g = 9.81; // m/s^2
@@ -18,9 +20,9 @@ class BallisticModel : public Model<3> {
 public:
     BallisticModel(
         const PayChute<3>& pc, Wind<3> _Vw,
-        ConFun<3> fi = []([[maybe_unused]] State<3> S0, State<3> S0_dot,
+        ConFun<3> fi = []([[maybe_unused]] const State<3>& S0, const State<3>& S0_dot,
                            [[maybe_unused]] double t) { return S0_dot.X()[2] > 0; })
-        : Model<3>(fi)
+        : Model<3>(std::move(fi))
         , pc(pc)
         , Vw(std::move(_Vw))
     {
@@ -67,17 +69,17 @@ void BallisticModel::operator()(const State<3>& state, State<3>& state_dot,
 {
     VReal3 pos = state.X();
     VReal3 vel = state.X_dot();
-    VReal3 wind_vel = Vw(state, pos, t);
+    VReal3 const wind_vel = Vw(state, pos, t);
 
     // compute cd_S
-    double cd_S = pc.CdS(state, t);
+    double const cd_S = pc.CdS(state, t);
     // compute coefficient rho (z is downward so flip the sign)
-    double rho = atm(-pos[2]);
+    double const rho = atm(-pos[2]);
     // Compute final coefficient
-    double k = 0.5 * rho * cd_S / pc.mass();
+    double const k = 0.5 * rho * cd_S / pc.mass();
     // compute relative velocity
     VReal3 wind_rel_vel = vel - wind_vel;
-    double wind_rel_vel_mod = wind_rel_vel.mod();
+    double const wind_rel_vel_mod = wind_rel_vel.mod();
 
     state_dot[0] = vel[0];
 
@@ -101,9 +103,9 @@ auto get_ic_from_comms(double z, double vmod, double heading) -> State<3>
 {
     // Convert heading from degrees to radians
     heading = heading * M_PI / 180;
-    double vx = vmod * cos(heading);
-    double vy = vmod * sin(heading);
-    double vz = 0; // We are assuming that drone doesnt climb during drop
+    double const vx = vmod * cos(heading);
+    double const vy = vmod * sin(heading);
+    double const vz = 0; // We are assuming that drone doesnt climb during drop
 
     return State<3> { 0, 0, -z, vx, vy, vz };
 }

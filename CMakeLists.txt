@@ -78,7 +78,8 @@ endif(COMPILE_NATIVE)
 
 # custom clang-tidy target
 set(CLANG_TIDY_CHECKS # from a lib of mine, sensible defaults
-    "modernize-*")
+    "cppcoreguidelines-*,performance-*,misc-*"
+)
 
 add_custom_target(
     clang-tidy-lib
