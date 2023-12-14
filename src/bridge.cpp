@@ -10,7 +10,7 @@
  * @return The GPS coordinates of the drop point.
  */
 template <size_t N>
-GPS get_drop(const State<N> S_end, const GPS& gps_target)
+auto get_drop(const State<N> S_end, const GPS& gps_target) -> GPS
 {
     GPS gps_drop;
     double R_E = 6378100; // Earth radius (m)
@@ -65,9 +65,9 @@ GPS get_drop(const State<N> S_end, const GPS& gps_target)
  * launch
  * @return int       : 0 = anyError, 1 = anErrorEncountered
  */
-int cxx_run(int size, double* wind, double* vel, double* target, double* h,
+auto cxx_run(int size, double* wind, double* vel, double* target, double* h,
     double* m, double CdS, double time, double step,
-    const char* integrator, double* result)
+    const char* integrator, double* result) -> int
 {
     std::string integrator_i = integrator;
     Simulation s(step, time, integrator_i);
@@ -147,7 +147,7 @@ extern "C" {
 
 #define KT2M 0.541 /* 1 knot = 0.541 m/s */
 
-static PyObject* run([[maybe_unused]] PyObject* self, PyObject* args)
+static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
 {
     /* params of run */
     PyObject *wind, /* describe the wind:   '{degree}{nodes}KT'          */
@@ -162,7 +162,7 @@ static PyObject* run([[maybe_unused]] PyObject* self, PyObject* args)
 
     if (!PyArg_ParseTuple(args, "OOOOOfiis", &wind, &vel, &target, &h, &m, &CdS,
             &time, &step, &integrator)) {
-        return NULL;
+        return nullptr;
     }
 
     /* check the objects */
@@ -171,7 +171,7 @@ static PyObject* run([[maybe_unused]] PyObject* self, PyObject* args)
             flag_target = !PyList_Check(target), flag_h = !PyList_Check(h),
             flag_m = !PyList_Check(m);
         if (flag_wind || flag_vel || flag_target || flag_h || flag_m) {
-            return NULL;
+            return nullptr;
         }
     }
 
@@ -180,34 +180,34 @@ static PyObject* run([[maybe_unused]] PyObject* self, PyObject* args)
     if (size == 0)
         size = PyList_GET_SIZE(wind);
     else if (size != PyList_GET_SIZE(wind))
-        return NULL;
+        return nullptr;
     if (size == 0)
         size = PyList_GET_SIZE(vel);
     else if (size != PyList_GET_SIZE(vel))
-        return NULL;
+        return nullptr;
     if (size == 0)
         size = PyList_GET_SIZE(target);
     else if (size != PyList_GET_SIZE(target))
-        return NULL;
+        return nullptr;
     if (size == 0)
         size = PyList_GET_SIZE(h);
     else if (size != PyList_GET_SIZE(h))
-        return NULL;
+        return nullptr;
     if (size == 0)
         size = PyList_GET_SIZE(m);
     else if (size != PyList_GET_SIZE(m))
-        return NULL;
+        return nullptr;
     if (size == 0)
-        return NULL;
+        return nullptr;
 
     /* alloc memory */
-    double *c_wind = (double*)malloc(size * 2 * sizeof(double)),
+    auto *c_wind = (double*)malloc(size * 2 * sizeof(double)),
            *c_vel = (double*)malloc(size * 3 * sizeof(double)),
            *c_target = (double*)malloc(size * 2 * sizeof(double)),
            *c_h = (double*)malloc(size * sizeof(double)),
            *c_m = (double*)malloc(size * sizeof(double));
-    if (c_wind == NULL || c_vel == NULL || c_target == NULL || c_h == NULL || c_m == NULL)
-        return NULL;
+    if (c_wind == nullptr || c_vel == nullptr || c_target == nullptr || c_h == nullptr || c_m == nullptr)
+        return nullptr;
 
     /* initialize memory */
     for (Py_ssize_t i = 0; i < size; ++i) {
@@ -223,13 +223,13 @@ static PyObject* run([[maybe_unused]] PyObject* self, PyObject* args)
             c_wind[2 * i + 1] = speed_knots * KT2M;
         }
         if (!PyTuple_Check(item_vel) || PyTuple_GET_SIZE(item_vel) != 3)
-            return NULL;
+            return nullptr;
         c_vel[3 * i + 0] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 0));
         c_vel[3 * i + 1] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 1));
         c_vel[3 * i + 2] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 2));
 
         if (!PyTuple_Check(item_target) || PyTuple_GET_SIZE(item_target) != 2)
-            return NULL;
+            return nullptr;
         c_target[2 * i + 0] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 0));
         c_target[2 * i + 1] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 1));
 
@@ -238,20 +238,20 @@ static PyObject* run([[maybe_unused]] PyObject* self, PyObject* args)
     }
 
     /* prepare output */
-    double* result = (double*)malloc(size * 2 * sizeof(double));
-    if (result == NULL)
-        return NULL;
+    auto* result = (double*)malloc(size * 2 * sizeof(double));
+    if (result == nullptr)
+        return nullptr;
     int ret = cxx_run((int)size, c_wind, c_vel, c_target, c_h, c_m, CdS, time,
         step / 1000., integrator, result);
     if (ret != 0)
-        return NULL;
+        return nullptr;
 
     /* convert result in List */
     PyObject* resultObj = PyList_New(size);
     for (Py_ssize_t i = 0; i < size; ++i) {
         PyObject* item_result = PyTuple_New(2);
         if (!item_result)
-            return NULL;
+            return nullptr;
         PyTuple_SET_ITEM(item_result, 0, PyFloat_FromDouble(result[2 * i + 0]));
         PyTuple_SET_ITEM(item_result, 1, PyFloat_FromDouble(result[2 * i + 1]));
         PyList_SET_ITEM(resultObj, i, item_result);
@@ -268,7 +268,7 @@ static PyObject* run([[maybe_unused]] PyObject* self, PyObject* args)
 
 static PyMethodDef module_methods[] = {
     { "run", run, METH_VARARGS, "Esegue il programma principale." },
-    { NULL, NULL, 0, NULL }
+    { nullptr, nullptr, 0, nullptr }
 };
 
 static struct PyModuleDef libsft_fall_modelModule = {
@@ -277,10 +277,10 @@ static struct PyModuleDef libsft_fall_modelModule = {
     "Questo modulo contiene le funzioni per le simulazioni.",
     -1,
     module_methods,
-    NULL,
-    NULL,
-    NULL,
-    NULL
+    nullptr,
+    nullptr,
+    nullptr,
+    nullptr
 };
 
 PyMODINIT_FUNC PyInit_libsft_fall_model(void)

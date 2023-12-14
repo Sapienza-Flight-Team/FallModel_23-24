@@ -21,17 +21,17 @@ public:
     }
     Wind(std::function<VReal3(const State<N>& s, const VReal3& x, double t)> wind_func)
         : wind_law(wind_func) {};
-    ~Wind() { } // Destructor
+    ~Wind() = default; // Destructor
 
     // Operators
-    Wind& operator=(Wind&& w) noexcept
+    auto operator=(Wind&& w) noexcept -> Wind&
     {
         if (this != &w)
             wind_law = w.wind_law;
         return *this;
     }
 
-    VReal3 operator()(const State<N>& s, const VReal3& x, double t) const
+    auto operator()(const State<N>& s, const VReal3& x, double t) const -> VReal3
     {
         return wind_law(s, x, t);
     };

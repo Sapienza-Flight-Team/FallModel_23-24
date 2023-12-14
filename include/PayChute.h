@@ -16,13 +16,13 @@ public:
     {
     }
 
-    ~PayChute() { }
+    ~PayChute() = default;
 
-    double CdS(const State<N>& state, const double t)
+    auto CdS(const State<N>& state, const double t) -> double
     {
         return this->pl_cds(state, t);
     }
-    double mass() { return this->pl_mass; }
+    auto mass() -> double { return this->pl_mass; }
 
 private:
     std::function<double(const State<N>&, const double)> pl_cds;

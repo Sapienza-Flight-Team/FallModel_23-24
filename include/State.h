@@ -75,10 +75,10 @@ public:
     State(const VReal<N>& pos, const VReal<N>& vel)
         : State<N>({ pos, vel }) {};
 
-    ~State() { } // Destructor
+    ~State() = default; // Destructor
 
     // = operator
-    State& operator=(const State<N>& other)
+    auto operator=(const State<N>& other) -> State&
     {
         if (this != &other) {
             this->v = other.v;
@@ -87,7 +87,7 @@ public:
         return *this;
     }
 
-    State& operator=(State<N>&& other) noexcept
+    auto operator=(State<N>&& other) noexcept -> State&
     {
         if (this != &other) {
             this->v = other.v;
@@ -96,21 +96,21 @@ public:
         return *this;
     }
 
-    State& operator()(const double _t)
+    auto operator()(const double _t) -> State&
     {
         t = _t;
         return *this;
     }
 
-    VReal<N> X() const
+    auto X() const -> VReal<N>
     {
         return VReal<N>(this->v.begin(), this->v.begin() + N);
     }
-    VReal<N> X_dot() const
+    auto X_dot() const -> VReal<N>
     {
         return VReal<N>(this->v.begin() + N, this->v.end());
     }
-    double get_t() const
+    [[nodiscard]] auto get_t() const -> double
     {
         return t;
     }

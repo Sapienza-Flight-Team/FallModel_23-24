@@ -63,6 +63,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE # SEMPRE
     -Wall
     -Wextra
     -Wpedantic
+    -Wno-unused-function
 ) # -O0 -g e -O3/-O2 sono sempre settate in base al profilo di build
 
 set(
@@ -77,7 +78,7 @@ endif(COMPILE_NATIVE)
 
 # custom clang-tidy target
 set(CLANG_TIDY_CHECKS # from a lib of mine, sensible defaults
-    "misc-*,modernize-*,cppcoreguidelines-*,performance-*,bugprone-*,clang-analyzer-*,-bugprone-easily-swappable-parameters,-bugprone-unchecked-optional-access,-misc-no-recursion,-misc-non-private-*,-performance-no-int-to-ptr,-cppcoreguidelines-avoid-magic-numbers,-cppcoreguidelines-pro-bounds-constant-array-index,-cppcoreguidelines-non-private-*")
+    "modernize-*")
 
 add_custom_target(
     clang-tidy-lib

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <utility>
 
 #include "Model.h"
 #include "PayChute.h"
@@ -21,20 +22,20 @@ public:
                            [[maybe_unused]] double t) { return S0_dot.X()[2] > 0; })
         : Model<3>(fi)
         , pc(pc)
-        , Vw(_Vw)
+        , Vw(std::move(_Vw))
     {
     }
-    ~BallisticModel() { }
+    ~BallisticModel() override = default;
 
-    void operator()(const State<3>& S0, State<3>& S0_dot, double t);
-    BallisticModel* clone() const { return new BallisticModel(*this); }
+    void operator()(const State<3>& S0, State<3>& S0_dot, double t) override;
+    [[nodiscard]] auto clone() const -> BallisticModel* { return new BallisticModel(*this); }
 
 private:
     PayChute<3> pc;
     Wind<3> Vw;
 };
 
-State<3> get_ic_from_comms(double z, double vmod, double heading);
+auto get_ic_from_comms(double z, double vmod, double heading) -> State<3>;
 
 // Implementations
 
@@ -52,7 +53,7 @@ State<3> get_ic_from_comms(double z, double vmod, double heading);
  *
  */
 
-static double atm(double h)
+static auto atm(double h) -> double
 {
     if (h < 0) {
         return 0;
@@ -96,7 +97,7 @@ void BallisticModel::operator()(const State<3>& state, State<3>& state_dot,
  * @return The initial state of the object.
  */
 
-State<3> get_ic_from_comms(double z, double vmod, double heading)
+auto get_ic_from_comms(double z, double vmod, double heading) -> State<3>
 {
     // Convert heading from degrees to radians
     heading = heading * M_PI / 180;

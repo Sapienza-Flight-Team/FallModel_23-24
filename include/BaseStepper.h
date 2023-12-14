@@ -8,8 +8,8 @@ namespace odeint = boost::numeric::odeint;
 template <typename ModelType, size_t N = ModelType::getN()>
 class BaseStepper {
 public:
-    BaseStepper() { }
-    virtual ~BaseStepper() { } // Virtual destructor
+    BaseStepper() = default;
+    virtual ~BaseStepper() = default; // Virtual destructor
     virtual void do_step(ModelType& model, State<N>& in, double t,
         State<N>& out, double dt)
         = 0;
@@ -18,8 +18,8 @@ public:
 template <typename ModelType, size_t N = ModelType::getN()>
 class RK4Stepper : public BaseStepper<ModelType> {
 public:
-    RK4Stepper() { }
-    ~RK4Stepper() { }
+    RK4Stepper() = default;
+    ~RK4Stepper() = default;
 
     void do_step(ModelType& model, State<N>& in, double t, State<N>& out,
         double dt) override
@@ -36,8 +36,8 @@ private:
 template <typename ModelType, size_t N = ModelType::getN()>
 class RK45Stepper : public BaseStepper<ModelType> {
 public:
-    RK45Stepper() { }
-    ~RK45Stepper() { }
+    RK45Stepper() = default;
+    ~RK45Stepper() = default;
 
     void do_step(ModelType& model, State<N>& in, double t, State<N>& out,
         double dt) override
@@ -54,8 +54,8 @@ private:
 template <typename ModelType, size_t N = ModelType::getN()>
 class EulerStepper : public BaseStepper<ModelType> {
 public:
-    EulerStepper() { }
-    ~EulerStepper() { }
+    EulerStepper() = default;
+    ~EulerStepper() = default;
     void do_step(ModelType& model, State<N>& in, double t, State<N>& out,
         double dt) override
     {

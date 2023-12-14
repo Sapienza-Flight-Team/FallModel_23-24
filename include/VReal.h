@@ -18,10 +18,7 @@ protected:
 
 public:
     // Constructors
-    VReal()
-        : v({ 0 })
-    {
-    } // default constructor
+    VReal() = default; // Default constructor
     // Initializer list constructor
     VReal(std::initializer_list<double> l)
     {
@@ -69,10 +66,10 @@ public:
             v = other.v;
         }
     } // move constructor
-    ~VReal() { } // Destructor
+    ~VReal() = default; // Destructor
 
     // Operators
-    VReal& operator=(const VReal& other)
+    auto operator=(const VReal& other) -> VReal&
     {
         if (this != &other) {
             v = other.v;
@@ -80,7 +77,7 @@ public:
         return *this;
     }
 
-    VReal& operator=(VReal&& other) noexcept
+    auto operator=(VReal&& other) noexcept -> VReal&
     {
         if (this != &other) {
             v = other.v;
@@ -88,7 +85,7 @@ public:
         return *this;
     }
 
-    VReal& operator+=(const VReal& p)
+    auto operator+=(const VReal& p) -> VReal&
     {
         for (size_t i = 0; i < N; i++) {
             v[i] += p.v[i];
@@ -96,7 +93,7 @@ public:
         return *this;
     }
 
-    VReal& operator-=(const VReal& p)
+    auto operator-=(const VReal& p) -> VReal&
     {
         for (size_t i = 0; i < N; i++) {
             v[i] -= p.v[i];
@@ -104,7 +101,7 @@ public:
         return *this;
     }
 
-    VReal& operator*=(const VReal& p)
+    auto operator*=(const VReal& p) -> VReal&
     {
         for (size_t i = 0; i < N; i++) {
             v[i] *= p.v[i];
@@ -112,7 +109,7 @@ public:
         return *this;
     }
 
-    VReal& operator/=(const VReal& p)
+    auto operator/=(const VReal& p) -> VReal&
     {
         for (size_t i = 0; i < N; i++) {
             v[i] /= p.v[i];
@@ -120,7 +117,7 @@ public:
         return *this;
     }
 
-    VReal& operator+=(const double scalar)
+    auto operator+=(const double scalar) -> VReal&
     {
         for (size_t i = 0; i < N; i++) {
             v[i] += scalar;
@@ -128,7 +125,7 @@ public:
         return *this;
     }
 
-    VReal& operator-=(const double scalar)
+    auto operator-=(const double scalar) -> VReal&
     {
         for (size_t i = 0; i < N; i++) {
             v[i] -= scalar;
@@ -136,7 +133,7 @@ public:
         return *this;
     }
 
-    VReal& operator*=(const double scalar)
+    auto operator*=(const double scalar) -> VReal&
     {
         for (size_t i = 0; i < N; i++) {
             v[i] *= scalar;
@@ -144,7 +141,7 @@ public:
         return *this;
     }
 
-    VReal& operator/=(const double scalar)
+    auto operator/=(const double scalar) -> VReal&
     {
         for (size_t i = 0; i < N; i++) {
             v[i] /= scalar;
@@ -152,7 +149,7 @@ public:
         return *this;
     }
 
-    VReal operator+(const VReal& other)
+    auto operator+(const VReal& other) -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -161,7 +158,7 @@ public:
         return res;
     }
 
-    VReal operator-(const VReal& other)
+    auto operator-(const VReal& other) -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -170,7 +167,7 @@ public:
         return res;
     }
 
-    VReal operator/(const VReal& other)
+    auto operator/(const VReal& other) -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -179,7 +176,7 @@ public:
         return res;
     }
 
-    VReal operator*(const VReal& other)
+    auto operator*(const VReal& other) -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -188,7 +185,7 @@ public:
         return res;
     }
 
-    VReal operator+(const double scalar)
+    auto operator+(const double scalar) -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -197,7 +194,7 @@ public:
         return res;
     }
 
-    VReal operator-(const double scalar)
+    auto operator-(const double scalar) -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -206,7 +203,7 @@ public:
         return res;
     }
 
-    VReal operator*(const double scalar)
+    auto operator*(const double scalar) -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -215,7 +212,7 @@ public:
         return res;
     }
 
-    VReal operator/(const double scalar)
+    auto operator/(const double scalar) -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -224,7 +221,7 @@ public:
         return res;
     }
 
-    VReal abs()
+    auto abs() -> VReal
     {
         VReal<N> res;
         for (size_t i = 0; i < N; i++) {
@@ -233,7 +230,7 @@ public:
         return res;
     }
 
-    double mod()
+    auto mod() -> double
     {
         double res = 0;
         for (size_t i = 0; i < N; i++) {
@@ -242,13 +239,13 @@ public:
         return std::sqrt(res);
     }
 
-    double& operator[](size_t i)
+    auto operator[](size_t i) -> double&
     {
         return v[i];
     }
 
     // Function to return an std::array copy of the data
-    std::array<double, N> data() const
+    [[nodiscard]] std::array<double, N> data() const
     {
         return v;
     }

@@ -1,6 +1,6 @@
 #include "../include/Waypoint.h"
 
-GPS dms2gps(const DMS& dms)
+auto dms2gps(const DMS& dms) -> GPS
 {
     GPS ret;
     for (int i = 0; i < 3; i++) {
@@ -10,7 +10,7 @@ GPS dms2gps(const DMS& dms)
     return ret;
 }
 
-DMS gps2dms(const GPS& gps)
+auto gps2dms(const GPS& gps) -> DMS
 {
     DMS ret;
 
@@ -35,7 +35,7 @@ DMS gps2dms(const GPS& gps)
  * @param head The heading to translate (in degrees).
  * @return The translated GPS coordinate.
  */
-GPS translate_gps(const GPS& gps, double d, double head, bool rad)
+auto translate_gps(const GPS& gps, double d, double head, bool rad) -> GPS
 {
     double R_E = 6378100; // Earth radius (m)
     if (d == 0) {
@@ -117,7 +117,7 @@ GPS get_drop(const State<N> S_end, const GPS &gps_target) {
  * given distance and heading from the starting GPS coordinate.
  * @throws std::invalid_argument if d is equal to 0.
  */
-std::vector<GPS> way_array(const GPS& drop, double heading, double d)
+auto way_array(const GPS& drop, double heading, double d) -> std::vector<GPS>
 {
     // translate with a distance d a waypoint with heading head and coordinate
     // in gps system return a vector of 3 gps coordinates
