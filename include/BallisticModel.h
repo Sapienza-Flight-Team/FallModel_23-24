@@ -8,24 +8,28 @@
 #include "VReal.h"
 #include "Wind.h"
 
-static const double rho0 = 1.2250;  // kg/m^3
-static const double g = 9.81;       // m/s^2
+static const double rho0 = 1.2250; // kg/m^3
+static const double g = 9.81; // m/s^2
 
 // N = 3 is the default for this model, only 3Dimensional space variables
 
 class BallisticModel : public Model<3> {
-   public:
+public:
     BallisticModel(
         PayChute<3> pc, Wind<3> _Vw,
-        ConFun<3> fi = [](State<3> S0, State<3> S0_dot,
-                          double t) { return S0_dot.X()[2] > 0; })
-        : Model<3>(fi), pc(pc), Vw(_Vw) {}
-    ~BallisticModel() {}
+        ConFun<3> fi = []([[maybe_unused]] State<3> S0, State<3> S0_dot,
+                           [[maybe_unused]] double t) { return S0_dot.X()[2] > 0; })
+        : Model<3>(fi)
+        , pc(pc)
+        , Vw(_Vw)
+    {
+    }
+    ~BallisticModel() { }
 
-     void operator()(const State<3>& S0, State<3>& S0_dot, double t);
+    void operator()(const State<3>& S0, State<3>& S0_dot, double t);
     BallisticModel* clone() const { return new BallisticModel(*this); }
 
-   private:
+private:
     PayChute<3> pc;
     Wind<3> Vw;
 };
@@ -48,7 +52,8 @@ State<3> get_ic_from_comms(double z, double vmod, double heading);
  *
  */
 
-static double atm(double h) {
+static double atm(double h)
+{
     if (h < 0) {
         return 0;
     } else {
@@ -57,7 +62,8 @@ static double atm(double h) {
 }
 
 void BallisticModel::operator()(const State<3>& state, State<3>& state_dot,
-                                double t) {
+    double t)
+{
     VReal3 pos = state.X();
     VReal3 vel = state.X_dot();
     VReal3 wind_vel = Vw(state, pos, t);
@@ -90,12 +96,13 @@ void BallisticModel::operator()(const State<3>& state, State<3>& state_dot,
  * @return The initial state of the object.
  */
 
-State<3> get_ic_from_comms(double z, double vmod, double heading) {
+State<3> get_ic_from_comms(double z, double vmod, double heading)
+{
     // Convert heading from degrees to radians
     heading = heading * M_PI / 180;
     double vx = vmod * cos(heading);
     double vy = vmod * sin(heading);
-    double vz = 0;  // We are assuming that drone doesnt climb during drop
+    double vz = 0; // We are assuming that drone doesnt climb during drop
 
-    return State<3>{0, 0, -z, vx, vy, vz};
+    return State<3> { 0, 0, -z, vx, vy, vz };
 }

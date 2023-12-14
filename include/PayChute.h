@@ -7,20 +7,24 @@
 
 template <size_t N>
 class PayChute {
-   public:
+public:
     PayChute(
         // PayLoad data
         std::function<double(const State<N>&, const double)> cds, double mass)
-        : pl_cds(cds), pl_mass(mass) {}
+        : pl_cds(cds)
+        , pl_mass(mass)
+    {
+    }
 
-    ~PayChute() {}
+    ~PayChute() { }
 
-    double CdS(const State<N>& state, const double t) {
+    double CdS(const State<N>& state, const double t)
+    {
         return this->pl_cds(state, t);
     }
     double mass() { return this->pl_mass; }
 
-   private:
+private:
     std::function<double(const State<N>&, const double)> pl_cds;
-    double pl_mass;  // Payload mass
+    double pl_mass; // Payload mass
 };

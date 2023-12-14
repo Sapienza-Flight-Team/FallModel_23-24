@@ -10,40 +10,40 @@
  * @return The GPS coordinates of the drop point.
  */
 template <size_t N>
-GPS get_drop(const State<N> S_end, const GPS &gps_target) {
+GPS get_drop(const State<N> S_end, const GPS& gps_target)
+{
     GPS gps_drop;
-    double R_E = 6378100;                    // Earth radius (m)
+    double R_E = 6378100; // Earth radius (m)
 
-    VReal3 pos = S_end.X();  // Come prendo la posizione? Devo conoscere il
-                               // numero di parametri spaziali
+    VReal3 pos = S_end.X(); // Come prendo la posizione? Devo conoscere il
+                            // numero di parametri spaziali
     double x = -pos[0];
     double y = -pos[1];
-/*
-    double d = sqrt(pow(x, 2) + pow(y, 2));
-    double head_rad = atan2(y, x);  // Get heading in rad
+    /*
+        double d = sqrt(pow(x, 2) + pow(y, 2));
+        double head_rad = atan2(y, x);  // Get heading in rad
 
-    // Get decimal representation in GPS coordinates
+        // Get decimal representation in GPS coordinates
 
-    double targ_lat = gps_target.lat * M_PI / 180;
-    double targ_lon = gps_target.lon * M_PI / 180;
+        double targ_lat = gps_target.lat * M_PI / 180;
+        double targ_lon = gps_target.lon * M_PI / 180;
 
-    // Compute gps_drop
-    gps_drop.lat = asin(sin(targ_lat) * cos(d / R_E) +
-                   cos(targ_lat) * sin(d / R_E) * cos(head_rad));
-    gps_drop.lon =
-        targ_lon +
-        atan2(sin(head_rad) * sin(d / R_E) * cos(gps_target.lat),
-              cos(d / R_E) - sin(gps_target.lat) * sin(gps_drop.lat));
+        // Compute gps_drop
+        gps_drop.lat = asin(sin(targ_lat) * cos(d / R_E) +
+                       cos(targ_lat) * sin(d / R_E) * cos(head_rad));
+        gps_drop.lon =
+            targ_lon +
+            atan2(sin(head_rad) * sin(d / R_E) * cos(gps_target.lat),
+                  cos(d / R_E) - sin(gps_target.lat) * sin(gps_drop.lat));
 
-    // Convert gps_drop to degree
-    gps_drop.lat = gps_drop.lat * 180 / M_PI;
-    gps_drop.lon = gps_drop.lon * 180 / M_PI;
-*/
+        // Convert gps_drop to degree
+        gps_drop.lat = gps_drop.lat * 180 / M_PI;
+        gps_drop.lon = gps_drop.lon * 180 / M_PI;
+    */
     gps_drop.lat = gps_target.lat + x * 180 / (M_PI * R_E);
     gps_drop.lon = gps_target.lon + y * 180 / (M_PI * R_E);
     return gps_drop;
 }
-
 
 /**
  * @brief initialize and run the model
@@ -66,8 +66,9 @@ GPS get_drop(const State<N> S_end, const GPS &gps_target) {
  * @return int       : 0 = anyError, 1 = anErrorEncountered
  */
 int cxx_run(int size, double* wind, double* vel, double* target, double* h,
-            double* m, double CdS, double time, double step,
-            const char* integrator, double* result) {
+    double* m, double CdS, double time, double step,
+    const char* integrator, double* result)
+{
     std::string integrator_i = integrator;
     Simulation s(step, time, integrator_i);
 
@@ -86,20 +87,20 @@ int cxx_run(int size, double* wind, double* vel, double* target, double* h,
 
         double mass_i = m[i];
 
-        GPS gps_target = {target_lat, target_lon};
+        GPS gps_target = { target_lat, target_lon };
 
         // Wind law
         std::function<VReal3(const State<3>&, const VReal<3>&, double)>
-            wind_law = [wind_head, wind_speed](const State<3>& state,
-                                               const VReal<3>& pos, double t) {
-                return VReal<3>{wind_speed * cos(wind_head),
-                                wind_speed * sin(wind_head), 0};
+            wind_law = [wind_head, wind_speed]([[maybe_unused]] const State<3>& state,
+                           [[maybe_unused]] const VReal<3>& pos, [[maybe_unused]] double t) {
+                return VReal<3> { wind_speed * cos(wind_head),
+                    wind_speed * sin(wind_head), 0 };
             };
         // CdS
         std::function<double(const State<3>&, double)> cds_payload =
-            [CdS](const State<3>& s, double t) {
+            [CdS]([[maybe_unused]] const State<3>& s, [[maybe_unused]] double t) {
                 if (t <= 1) {
-                    return CdS * (1- cos(3 * t));
+                    return CdS * (1 - cos(3 * t));
                 } else {
                     return CdS;
                 }
@@ -113,12 +114,12 @@ int cxx_run(int size, double* wind, double* vel, double* target, double* h,
         BallisticModel bm(pc, Vw);
         // Create simulation object
 
-        State<3> S0 = {0,
-                       0,
-                       -h_i,
-                       vel_speed * cos(vel_head),
-                       vel_speed * sin(vel_head),
-                       vel_down};
+        State<3> S0 = { 0,
+            0,
+            -h_i,
+            vel_speed * cos(vel_head),
+            vel_speed * sin(vel_head),
+            vel_down };
 
         // Run the simulation
         Results<3> res = s.run(bm, S0);
@@ -146,20 +147,21 @@ extern "C" {
 
 #define KT2M 0.541 /* 1 knot = 0.541 m/s */
 
-static PyObject* run(PyObject* self, PyObject* args) {
+static PyObject* run([[maybe_unused]] PyObject* self, PyObject* args)
+{
     /* params of run */
     PyObject *wind, /* describe the wind:   '{degree}{nodes}KT'          */
-        *vel,       /* velocity of UAV:   [radians, magnitude, v_down]   */
-        *target,    /* GPS target position: [latitude, longitude]        */
-        *h,         /* altitude of UAV (in m)                            */
-        *m;         /* Mass of payloads (in g)                           */
-    float CdS;      /* CdS coefficient of parachutes  */
-    int time,       /* Time of the simulation (in s)  */
-        step;       /* Step of the simulation (in ms) */
+        *vel, /* velocity of UAV:   [radians, magnitude, v_down]   */
+        *target, /* GPS target position: [latitude, longitude]        */
+        *h, /* altitude of UAV (in m)                            */
+        *m; /* Mass of payloads (in g)                           */
+    float CdS; /* CdS coefficient of parachutes  */
+    int time, /* Time of the simulation (in s)  */
+        step; /* Step of the simulation (in ms) */
     const char* integrator; /* integrator */
 
     if (!PyArg_ParseTuple(args, "OOOOOfiis", &wind, &vel, &target, &h, &m, &CdS,
-                          &time, &step, &integrator)) {
+            &time, &step, &integrator)) {
         return NULL;
     }
 
@@ -195,7 +197,8 @@ static PyObject* run(PyObject* self, PyObject* args) {
         size = PyList_GET_SIZE(m);
     else if (size != PyList_GET_SIZE(m))
         return NULL;
-    if (size == 0) return NULL;
+    if (size == 0)
+        return NULL;
 
     /* alloc memory */
     double *c_wind = (double*)malloc(size * 2 * sizeof(double)),
@@ -203,8 +206,7 @@ static PyObject* run(PyObject* self, PyObject* args) {
            *c_target = (double*)malloc(size * 2 * sizeof(double)),
            *c_h = (double*)malloc(size * sizeof(double)),
            *c_m = (double*)malloc(size * sizeof(double));
-    if (c_wind == NULL || c_vel == NULL || c_target == NULL || c_h == NULL ||
-        c_m == NULL)
+    if (c_wind == NULL || c_vel == NULL || c_target == NULL || c_h == NULL || c_m == NULL)
         return NULL;
 
     /* initialize memory */
@@ -228,10 +230,8 @@ static PyObject* run(PyObject* self, PyObject* args) {
 
         if (!PyTuple_Check(item_target) || PyTuple_GET_SIZE(item_target) != 2)
             return NULL;
-        c_target[2 * i + 0] =
-            PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 0));
-        c_target[2 * i + 1] =
-            PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 1));
+        c_target[2 * i + 0] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 0));
+        c_target[2 * i + 1] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 1));
 
         c_h[i] = PyFloat_AsDouble(PyList_GET_ITEM(h, i));
         c_m[i] = PyFloat_AsDouble(PyList_GET_ITEM(m, i));
@@ -239,16 +239,19 @@ static PyObject* run(PyObject* self, PyObject* args) {
 
     /* prepare output */
     double* result = (double*)malloc(size * 2 * sizeof(double));
-    if (result == NULL) return NULL;
+    if (result == NULL)
+        return NULL;
     int ret = cxx_run((int)size, c_wind, c_vel, c_target, c_h, c_m, CdS, time,
-                      step / 1000., integrator, result);
-    if (ret != 0) return NULL;
+        step / 1000., integrator, result);
+    if (ret != 0)
+        return NULL;
 
     /* convert result in List */
     PyObject* resultObj = PyList_New(size);
     for (Py_ssize_t i = 0; i < size; ++i) {
         PyObject* item_result = PyTuple_New(2);
-        if (!item_result) return NULL;
+        if (!item_result)
+            return NULL;
         PyTuple_SET_ITEM(item_result, 0, PyFloat_FromDouble(result[2 * i + 0]));
         PyTuple_SET_ITEM(item_result, 1, PyFloat_FromDouble(result[2 * i + 1]));
         PyList_SET_ITEM(resultObj, i, item_result);
@@ -264,8 +267,9 @@ static PyObject* run(PyObject* self, PyObject* args) {
 }
 
 static PyMethodDef module_methods[] = {
-    {"run", run, METH_VARARGS, "Esegue il programma principale."},
-    {NULL, NULL, 0, NULL}};
+    { "run", run, METH_VARARGS, "Esegue il programma principale." },
+    { NULL, NULL, 0, NULL }
+};
 
 static struct PyModuleDef libsft_fall_modelModule = {
     PyModuleDef_HEAD_INIT,
@@ -276,9 +280,11 @@ static struct PyModuleDef libsft_fall_modelModule = {
     NULL,
     NULL,
     NULL,
-    NULL};
+    NULL
+};
 
-PyMODINIT_FUNC PyInit_libsft_fall_model(void) {
+PyMODINIT_FUNC PyInit_libsft_fall_model(void)
+{
     return PyModule_Create(&libsft_fall_modelModule);
 }
 
