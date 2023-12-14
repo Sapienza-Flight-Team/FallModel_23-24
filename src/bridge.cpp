@@ -1,5 +1,7 @@
 #include "../include/pch.h"
+#include <memory>
 #include <string>
+#include <vector>
 
 /**
  * Calculates the GPS coordinates of a drop point given the current state,
@@ -201,17 +203,13 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
         return nullptr;
 
     /* alloc memory */
-    auto *c_wind = (double*)malloc(size * 2 * sizeof(double)),
-         *c_vel = (double*)malloc(size * 3 * sizeof(double)),
-         *c_target = (double*)malloc(size * 2 * sizeof(double)),
-         *c_h = (double*)malloc(size * sizeof(double)),
-         *c_m = (double*)malloc(size * sizeof(double));
+    auto c_wind = std::make_unique<double[]>(size * 2);
+    auto c_vel = std::make_unique<double[]>(size * 3);
+    auto c_target = std::make_unique<double[]>(size * 2);
+    auto c_h = std::make_unique<double[]>(size);
+    auto c_m = std::make_unique<double[]>(size);
+
     if (c_wind == nullptr || c_vel == nullptr || c_target == nullptr || c_h == nullptr || c_m == nullptr) {
-        free(c_wind);
-        free(c_vel);
-        free(c_target);
-        free(c_h);
-        free(c_m);
         return nullptr;
     }
 
@@ -229,11 +227,7 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
             c_wind[2 * i + 1] = speed_knots * KT2M;
         }
         if (!PyTuple_Check(item_vel) || PyTuple_GET_SIZE(item_vel) != 3) {
-            free(c_wind);
-            free(c_vel);
-            free(c_target);
-            free(c_h);
-            free(c_m);
+
             return nullptr;
         }
         c_vel[3 * i + 0] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 0));
@@ -241,11 +235,6 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
         c_vel[3 * i + 2] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 2));
 
         if (!PyTuple_Check(item_target) || PyTuple_GET_SIZE(item_target) != 2) {
-            free(c_wind);
-            free(c_vel);
-            free(c_target);
-            free(c_h);
-            free(c_m);
             return nullptr;
         }
         c_target[2 * i + 0] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 0));
@@ -256,24 +245,13 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
     }
 
     /* prepare output */
-    auto* result = (double*)malloc(size * 2 * sizeof(double));
+    auto result = std::make_unique<double[]>(size * 2);
     if (result == nullptr) {
-        free(c_wind);
-        free(c_vel);
-        free(c_target);
-        free(c_h);
-        free(c_m);
         return nullptr;
     }
-    int ret = cxx_run((int)size, c_wind, c_vel, c_target, c_h, c_m, CdS, time,
-        step / 1000., integrator, result);
+    int ret = cxx_run((int)size, c_wind.get(), c_vel.get(), c_target.get(), c_h.get(), c_m.get(), CdS, time,
+        step / 1000., integrator, result.get());
     if (ret != 0) {
-        free(result);
-        free(c_wind);
-        free(c_vel);
-        free(c_target);
-        free(c_h);
-        free(c_m);
         return nullptr;
     }
 
@@ -282,12 +260,6 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
     for (Py_ssize_t i = 0; i < size; ++i) {
         PyObject* item_result = PyTuple_New(2);
         if (!item_result) {
-            free(result);
-            free(c_m);
-            free(c_h);
-            free(c_target);
-            free(c_vel);
-            free(c_wind);
             return nullptr;
         }
         PyTuple_SET_ITEM(item_result, 0, PyFloat_FromDouble(result[2 * i + 0]));
@@ -295,12 +267,6 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
         PyList_SET_ITEM(resultObj, i, item_result);
     }
 
-    free(result);
-    free(c_m);
-    free(c_h);
-    free(c_target);
-    free(c_vel);
-    free(c_wind);
     return Py_BuildValue("O", resultObj);
 }
 
