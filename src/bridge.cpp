@@ -202,12 +202,18 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
 
     /* alloc memory */
     auto *c_wind = (double*)malloc(size * 2 * sizeof(double)),
-           *c_vel = (double*)malloc(size * 3 * sizeof(double)),
-           *c_target = (double*)malloc(size * 2 * sizeof(double)),
-           *c_h = (double*)malloc(size * sizeof(double)),
-           *c_m = (double*)malloc(size * sizeof(double));
-    if (c_wind == nullptr || c_vel == nullptr || c_target == nullptr || c_h == nullptr || c_m == nullptr)
+         *c_vel = (double*)malloc(size * 3 * sizeof(double)),
+         *c_target = (double*)malloc(size * 2 * sizeof(double)),
+         *c_h = (double*)malloc(size * sizeof(double)),
+         *c_m = (double*)malloc(size * sizeof(double));
+    if (c_wind == nullptr || c_vel == nullptr || c_target == nullptr || c_h == nullptr || c_m == nullptr) {
+        free(c_wind);
+        free(c_vel);
+        free(c_target);
+        free(c_h);
+        free(c_m);
         return nullptr;
+    }
 
     /* initialize memory */
     for (Py_ssize_t i = 0; i < size; ++i) {
@@ -222,14 +228,26 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
             c_wind[2 * i] = angle_grad * M_PI / 180.0;
             c_wind[2 * i + 1] = speed_knots * KT2M;
         }
-        if (!PyTuple_Check(item_vel) || PyTuple_GET_SIZE(item_vel) != 3)
+        if (!PyTuple_Check(item_vel) || PyTuple_GET_SIZE(item_vel) != 3) {
+            free(c_wind);
+            free(c_vel);
+            free(c_target);
+            free(c_h);
+            free(c_m);
             return nullptr;
+        }
         c_vel[3 * i + 0] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 0));
         c_vel[3 * i + 1] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 1));
         c_vel[3 * i + 2] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_vel, 2));
 
-        if (!PyTuple_Check(item_target) || PyTuple_GET_SIZE(item_target) != 2)
+        if (!PyTuple_Check(item_target) || PyTuple_GET_SIZE(item_target) != 2) {
+            free(c_wind);
+            free(c_vel);
+            free(c_target);
+            free(c_h);
+            free(c_m);
             return nullptr;
+        }
         c_target[2 * i + 0] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 0));
         c_target[2 * i + 1] = PyFloat_AsDouble(PyTuple_GET_ITEM(item_target, 1));
 
@@ -239,19 +257,39 @@ static auto run([[maybe_unused]] PyObject* self, PyObject* args) -> PyObject*
 
     /* prepare output */
     auto* result = (double*)malloc(size * 2 * sizeof(double));
-    if (result == nullptr)
+    if (result == nullptr) {
+        free(c_wind);
+        free(c_vel);
+        free(c_target);
+        free(c_h);
+        free(c_m);
         return nullptr;
+    }
     int ret = cxx_run((int)size, c_wind, c_vel, c_target, c_h, c_m, CdS, time,
         step / 1000., integrator, result);
-    if (ret != 0)
+    if (ret != 0) {
+        free(result);
+        free(c_wind);
+        free(c_vel);
+        free(c_target);
+        free(c_h);
+        free(c_m);
         return nullptr;
+    }
 
     /* convert result in List */
     PyObject* resultObj = PyList_New(size);
     for (Py_ssize_t i = 0; i < size; ++i) {
         PyObject* item_result = PyTuple_New(2);
-        if (!item_result)
+        if (!item_result) {
+            free(result);
+            free(c_m);
+            free(c_h);
+            free(c_target);
+            free(c_vel);
+            free(c_wind);
             return nullptr;
+        }
         PyTuple_SET_ITEM(item_result, 0, PyFloat_FromDouble(result[2 * i + 0]));
         PyTuple_SET_ITEM(item_result, 1, PyFloat_FromDouble(result[2 * i + 1]));
         PyList_SET_ITEM(resultObj, i, item_result);

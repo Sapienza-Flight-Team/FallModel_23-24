@@ -20,7 +20,7 @@ enum Format { B = 1,
 
 std::string getFormatString(Format format)
 {
-    std::string formatString = 0;
+    std::string formatString;
     switch (format) {
     case B:
         formatString = "B";

@@ -17,7 +17,7 @@ static const double g = 9.81; // m/s^2
 class BallisticModel : public Model<3> {
 public:
     BallisticModel(
-        PayChute<3> pc, Wind<3> _Vw,
+        const PayChute<3>& pc, Wind<3> _Vw,
         ConFun<3> fi = []([[maybe_unused]] State<3> S0, State<3> S0_dot,
                            [[maybe_unused]] double t) { return S0_dot.X()[2] > 0; })
         : Model<3>(fi)

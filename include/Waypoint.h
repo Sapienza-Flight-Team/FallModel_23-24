@@ -5,9 +5,8 @@
 #include "../include/State.h"
 
 using GPS = struct {
-    double lat = 0;
-    double lon = 0;
-
+    double lat = 0.;
+    double lon = 0.;
 };
 
 using DMS = struct {
