@@ -13,30 +13,35 @@
 #include "Model.h"
 #include "State.h"
 
-enum Format { B = 1, KB = 3, MB = 6, GB = 9 };
+enum Format { B = 1,
+    KB = 3,
+    MB = 6,
+    GB = 9 };
 
-std::string getFormatString(Format format) {
-    std::string formatString;
+std::string getFormatString(Format format)
+{
+    std::string formatString = 0;
     switch (format) {
-        case B:
-            formatString = "B";
-            break;
-        case KB:
-            formatString = "KB";
-            break;
-        case MB:
-            formatString = "MB";
-            break;
-        case GB:
-            formatString = "GB";
-            break;
-        default:
-            formatString = "";
-            break;
+    case B:
+        formatString = "B";
+        break;
+    case KB:
+        formatString = "KB";
+        break;
+    case MB:
+        formatString = "MB";
+        break;
+    case GB:
+        formatString = "GB";
+        break;
+    default:
+        formatString = "";
+        break;
     }
     return formatString;
 }
-void handle_bad_alloc(std::bad_alloc& ba, size_t size, Format format = B) {
+void handle_bad_alloc [[noreturn]] (std::bad_alloc& ba, size_t size, Format format = B)
+{
     std::cerr << "bad_alloc caught: " << ba.what() << '\n';
     std::cerr << "Trying to allocate " << size / std::pow(10, int(format))
               << getFormatString(format) << "\n";
@@ -49,48 +54,56 @@ void handle_bad_alloc(std::bad_alloc& ba, size_t size, Format format = B) {
     std::exit(EXIT_FAILURE);
 }
 
-enum Method { rk4, rk45, euler };
+enum Method { rk4,
+    rk45,
+    euler };
 
-extern const unsigned N_THREADS{[]() {
-    unsigned n_threads{std::thread::hardware_concurrency()};
+extern const unsigned N_THREADS { []() {
+    unsigned n_threads { std::thread::hardware_concurrency() };
     if (n_threads == 0) {
         n_threads = 1;
     }
     return n_threads;
-}()};
+}() };
 
 template <size_t N>
 struct Results {
-   private:
-    std::unique_ptr<State<N>[]> results;
+private:
+    std::unique_ptr<State<N>[]> results {};
     std::vector<std::span<State<N>>> results_view;
 
-   public:
-    Results() : results(nullptr) {}
-    Results(State<N>* res, std::span<State<N>> res_span) : results(res) {
+public:
+    Results() = default;
+    Results(State<N>* res, std::span<State<N>> res_span)
+        : results(res)
+    {
         results_view.push_back(res_span);
     }
 
     Results(State<N>* res, std::vector<std::span<State<N>>> res_spans)
-        : results(res), results_view(res_spans) {}
-    ~Results() {}
+        : results(res)
+        , results_view(res_spans)
+    {
+    }
+    ~Results() = default;
 
     // View only operator, doenst allow to modify the results
-    const std::span<State<N>>& operator[](size_t i) const {
+    const std::span<State<N>>& operator[](size_t i) const
+    {
         if (results) {
             if (i >= results_view.size() || results_view[i].empty()) {
                 throw std::out_of_range("Index out of range");
             }
 
-          
-            return results_view[i];  // Sintax results[i][j] to access results
+            return results_view[i]; // Sintax results[i][j] to access results
 
         } else {
             throw std::runtime_error("Results not initialized");
         }
     }
 
-    State<N> getLast(size_t idx = 0) {
+    auto getLast(size_t idx = 0) -> State<N>
+    {
         if (results) {
             if (results_view.size() >= idx) {
                 return results_view[idx].back();
@@ -101,38 +114,38 @@ struct Results {
             throw std::runtime_error("Results not initialized");
         }
     }
-    bool sanityCheck() { return results; }
-    size_t getSSize() { return results_view.size(); }
+    auto sanityCheck() -> bool { return results; }
+    auto getSSize() -> size_t { return results_view.size(); }
 };
 
 /**
  * @brief Struct containing settings for an ODE simulation.
  *
  */
-typedef struct {
+using ODESettings = struct {
     // Methods parameters
-    double dt;          /**< Time step */
-    double T;           /**< Total simulation time */
-    std::string method; /**< ODE solving method */
-} ODESettings;
+    double dt {}; /**< Time step */
+    double T {}; /**< Total simulation time */
+    std::string method {}; /**< ODE solving method */
+};
 
 /**
  * @brief Class for simulating the model.
  *
  */
 class Simulation {
-   private:
+private:
     // Methods parameters
-    Method m;             /**< ODE solving method */
-    double time_step;     /**< Time step for simulation. */
+    Method m; /**< ODE solving method */
+    double time_step; /**< Time step for simulation. */
     double time_interval; /**< Time interval for simulation. */
 
     template <typename ModelType, size_t N = ModelType::getN()>
     std::span<State<N>> _run(ModelType h, State<N> S0,
-                             std::span<State<N>> res_span,
-                             BaseStepper<ModelType>* stepper);
+        std::span<State<N>> res_span,
+        std::unique_ptr<BaseStepper<ModelType>>&& stepper);
 
-   public:
+public:
     /**
      * @brief Constructor for Simulation class.
      *
@@ -140,7 +153,8 @@ class Simulation {
      * @param T Time interval for simulation.
      * @param method Method to be used for simulation.
      */
-    Simulation(double dt, double T, std::string method = "") {
+    Simulation(double dt, double T, std::string method = "")
+    {
         // dt and T sanity check
         if (dt <= 0) {
             throw std::invalid_argument("dt must be nonzero positive");
@@ -175,7 +189,9 @@ class Simulation {
      * @param settings ODESettings object containing simulation settings.
      */
     Simulation(ODESettings settings)
-        : Simulation(settings.dt, settings.T, settings.method) {}
+        : Simulation(settings.dt, settings.T, settings.method)
+    {
+    }
 
     /**
      * @brief Changes the simulation settings.
@@ -194,7 +210,7 @@ class Simulation {
      */
 
     template <typename ModelType, size_t N = ModelType::getN()>
-    Results<N> run(ModelType h, State<N> S0);
+    auto run(ModelType h, State<N> S0) -> Results<N>;
 
     /**
      * @brief Runs the simulation in parallel for multiple initial
@@ -205,17 +221,16 @@ class Simulation {
      *
      */
     template <typename ModelType, size_t N = ModelType::getN()>
-    Results<N> run_parallel_ic(ModelType h, std::span<State<N>> v_S0);
+    auto run_parallel_ic(ModelType h, std::span<State<N>> v_S0) -> Results<N>;
 };
 
 // Implementations
 
-namespace odeint = boost::numeric::odeint;
-
 template <typename ModelType, size_t N>
 std::span<State<N>> Simulation::_run(ModelType h, State<N> S0,
-                                     std::span<State<N>> w_span,
-                                     BaseStepper<ModelType>* stepper) {
+    std::span<State<N>> w_span,
+    std::unique_ptr<BaseStepper<ModelType>>&& stepper)
+{
     /**
      * Runs the dynamical model simulation using the provided Model object
      * and initial state. If a pointer to a State object is provided, the
@@ -233,7 +248,7 @@ std::span<State<N>> Simulation::_run(ModelType h, State<N> S0,
     // --- Compile time instructions ---
 
     static_assert(std::is_base_of<Model<N>, ModelType>::value,
-                  "ModelType must be derived from Model");
+        "ModelType must be derived from Model");
 
     int n_steps = w_span.size() - 1;
 
@@ -259,7 +274,7 @@ std::span<State<N>> Simulation::_run(ModelType h, State<N> S0,
             stepper->do_step(h, S0_step, t, out, time_step);
 
             if (h.conditionFunc(S0_step, out,
-                                t + time_step)) {  // TODO: Da toccare
+                    t + time_step)) { // TODO: Da toccare
                 // Would be nice to do a weighted average of the last two
                 // states until last.z > 0
                 return w_span.subspan(0, i + 1);
@@ -278,22 +293,23 @@ std::span<State<N>> Simulation::_run(ModelType h, State<N> S0,
         }
     }
 
-    return w_span;  // If the condition is never met, return the last
-                    // state
+    return w_span; // If the condition is never met, return the last
+                   // state
 }
 
 template <typename ModelType, size_t N>
-Results<N> Simulation::run(ModelType h, State<N> S0) {
+auto Simulation::run(ModelType h, State<N> S0) -> Results<N>
+{
     // ...
     const size_t n_steps = ceil(this->time_interval / this->time_step);
-    BaseStepper<ModelType>* stepper;
+    std::unique_ptr<BaseStepper<ModelType>> stepper;
     try {
         if (m == rk4) {
-            stepper = new RK4Stepper<ModelType>();
+            stepper = std::make_unique<RK4Stepper<ModelType>>();
         } else if (m == rk45) {
-            stepper = new RK45Stepper<ModelType>();
+            stepper = std::make_unique<RK45Stepper<ModelType>>();
         } else if (m == euler) {
-            stepper = new EulerStepper<ModelType>();
+            stepper = std::make_unique<EulerStepper<ModelType>>();
         } else {
             throw std::invalid_argument("Invalid method");
         }
@@ -303,7 +319,7 @@ Results<N> Simulation::run(ModelType h, State<N> S0) {
     }
 
     // Allocate memory for results
-    State<N>* res;
+    State<N>* res = nullptr;
     try {
         res = new State<N>[n_steps + 1];
     } catch (std::bad_alloc& ba) {
@@ -311,26 +327,25 @@ Results<N> Simulation::run(ModelType h, State<N> S0) {
         handle_bad_alloc(ba, (n_steps + 1) * sizeof(State<N>), KB);
     }
     // Run simulation
-    std::span<State<N>> r_sp = _run(h, S0, {res, n_steps + 1}, stepper);
+    std::span<State<N>> r_sp = _run(h, S0, { res, n_steps + 1 }, std::move(stepper));
 
-    // Clean stepper
-    delete stepper;
     return Results(res, r_sp);
 }
 
 template <typename ModelType, size_t N>
-Results<N> Simulation::run_parallel_ic(ModelType h, std::span<State<N>> v_S0) {
+auto Simulation::run_parallel_ic(ModelType h, std::span<State<N>> v_S0) -> Results<N>
+{
     // Runs the simulation for each initial condition in v_S0
 
     // Check if ModelType is derived from Model
     static_assert(std::is_base_of<Model<N>, ModelType>::value,
-                  "ModelType must be derived from Model");
+        "ModelType must be derived from Model");
 
     // This needs to be modyfied for multistep methods, as each method needs its
     // own stepper
     // Create an array of BaseStepper[N_THREADS] pointers and instantiate each
     // pointer with the correct stepper
-    BaseStepper<ModelType>** stepper;
+    BaseStepper<ModelType>** stepper = nullptr = nullptr;
     try {
         stepper = new BaseStepper<ModelType>*[N_THREADS];
         for (size_t i = 0; i < N_THREADS; i++) {
@@ -353,7 +368,7 @@ Results<N> Simulation::run_parallel_ic(ModelType h, std::span<State<N>> v_S0) {
     const size_t n_steps = ceil(this->time_interval / this->time_step);
 
     // Allocate memory for results
-    State<N>* res;
+    State<N>* res = nullptr;
     try {
         res = new State<N>[n_ic * (n_steps + 1)];
     } catch (std::bad_alloc& ba) {
@@ -362,7 +377,7 @@ Results<N> Simulation::run_parallel_ic(ModelType h, std::span<State<N>> v_S0) {
     }
 
     std::vector<std::span<State<N>>> v_res_spans(
-        n_ic);  // Reserve space for return spans
+        n_ic); // Reserve space for return spans
     // Create threads
     std::vector<std::thread> threads(N_THREADS);
 
@@ -373,7 +388,7 @@ Results<N> Simulation::run_parallel_ic(ModelType h, std::span<State<N>> v_S0) {
             for (auto j = thread_id; j < n_ic; j += N_THREADS) {
                 State<N> const& S0 = v_S0[j];
                 std::span<State<N>> r_sp = _run(
-                    h, S0, {res + j * (n_steps + 1), n_steps + 1}, stepper[i]);
+                    h, S0, { res + j * (n_steps + 1), n_steps + 1 }, stepper[i]);
                 // No need to lock res_spans for write
                 v_res_spans[j] = r_sp;
                 // if stepper is multi step, it needs to be cleaned here
@@ -387,8 +402,8 @@ Results<N> Simulation::run_parallel_ic(ModelType h, std::span<State<N>> v_S0) {
         }
     }
     for (size_t i = 0; i < N_THREADS; i++) {
-        delete stepper[i];  // Clean steppers
+        delete stepper[i]; // Clean steppers
     }
-    delete[] stepper;  // Clean stepper
+    delete[] stepper; // Clean stepper
     return Results(res, v_res_spans);
 }

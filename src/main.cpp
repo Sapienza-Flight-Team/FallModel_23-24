@@ -12,48 +12,50 @@
 
 const size_t dim3 = 3;
 
-double cds_payload(const State<dim3>& s, double t) {
+double cds_payload(const State<dim3>& s, double t)
+{
     return 0.47 * 0.1257 + 1.75 * 0.3491;
 }
 
 constexpr double load_mass = 1.15;
 
-VReal3 wind_law(const State<dim3>& state, const VReal<dim3>& pos, double t) {
+VReal3 wind_law(const State<dim3>& state, const VReal<dim3>& pos, double t)
+{
     return VReal<dim3>();
 }
 
 std::vector<State<dim3>> createVS0(size_t elements, State<dim3> S0,
-                                   double variation) {
+    double variation)
+{
     std::vector<State<dim3>> v_S0;
     v_S0.reserve(elements);
     for (size_t i = 0; i < elements; i++) {
         State<dim3> S;
         if (i % 2 == 0) {
-            S = S0 + State<dim3>{
-                         0, 0, 0, i * variation, i * variation, i * variation};
+            S = S0 + State<dim3> { 0, 0, 0, i * variation, i * variation, i * variation };
         } else {
-            S = S0 + State<dim3>{
-                         0, 0, 0, i * variation, i * variation, i * variation};
+            S = S0 + State<dim3> { 0, 0, 0, i * variation, i * variation, i * variation };
         }
         v_S0.push_back(S);
     }
     return v_S0;
 }
 
-std::string fPath = {"../test/"};
-std::string pPath = {"../test/para/"};
+std::string fPath = { "../test/" };
+std::string pPath = { "../test/para/" };
 
 using namespace std::filesystem;
 path p = path("../test/para/");
 
-int main() {
+int main()
+{
     PayChute<dim3> pc(cds_payload, load_mass);
     Wind<dim3> Vw(wind_law);
     BallisticModel bm(pc, Vw);
-    State<dim3> S0 = {0, 0, -40, 22, 0, 0};
+    State<dim3> S0 = { 0, 0, -40, 22, 0, 0 };
 
     {
-        size_t n_ic = 10000;  // 10k ic
+        size_t n_ic = 10000; // 10k ic
         std::vector vS0 = createVS0(n_ic, S0, 0.05);
 
         std::cout << "--- Serial code --- n_iterations: " << n_ic << "\n";
@@ -65,14 +67,13 @@ int main() {
             std::cout << res.getLast() << "\n";
         }
         auto stop = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
         std::cout << "Elapsed time: " << duration.count() << " s\n";
         std::cout << "Time per run: " << std::fixed << std::setprecision(10)
                   << std::chrono::duration_cast<std::chrono::milliseconds>(
                          duration)
-                             .count() /
-                         n_ic
+                         .count()
+                / n_ic
                   << "ms\n";
 
         // std::ofstream file("../test/test_auto.csv");
@@ -83,24 +84,23 @@ int main() {
     }
 
     {
-        size_t n_ic = 10000;  // 10k ic
+        size_t n_ic = 10000; // 10k ic
         std::vector vS0 = createVS0(n_ic, S0, 0.05);
         std::cout << "--- Parallel propagation --- n_iterations: " << n_ic
                   << "\n";
 
         Simulation ps(0.01, 10, "");
         auto start = std::chrono::high_resolution_clock::now();
-        Results s_par = ps.run_parallel_ic(bm, {vS0});
+        Results s_par = ps.run_parallel_ic(bm, { vS0 });
         auto stop = std::chrono::high_resolution_clock::now();
-        auto duration =
-            std::chrono::duration_cast<std::chrono::seconds>(stop - start);
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(stop - start);
         std::cout << "Elapsed time: " << duration.count() << " s\n";
 
         std::cout << "Time per run: " << std::fixed << std::setprecision(10)
                   << std::chrono::duration_cast<std::chrono::milliseconds>(
                          duration)
-                             .count() /
-                         n_ic
+                         .count()
+                / n_ic
                   << "ms\n";
 
         // // Clean result folder
