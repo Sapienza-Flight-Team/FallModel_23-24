@@ -4,19 +4,20 @@
 
 #include "../include/State.h"
 
-using GPS = struct {
-    double lat = 0.;
-    double lon = 0.;
-};
+typedef struct {
+    double lat = 0;
+    double lon = 0;
 
-using DMS = struct {
-    int N[3] = { 0 };
-    int E[3] = { 0 };
-};
+} GPS;
 
-auto dms2gps(const DMS& dms) -> GPS;
+typedef struct {
+    int N[3] = {0};
+    int E[3] = {0};
+} DMS;
 
-auto gps2dms(const GPS& gps) -> DMS;
+GPS dms2gps(const DMS &dms);
+
+DMS gps2dms(const GPS &gps);
 
 /**
  * Calculates the GPS coordinates of a drop point given the current state,
@@ -26,7 +27,7 @@ auto gps2dms(const GPS& gps) -> DMS;
  * @param heading The heading of the aircraft in degrees.
  * @return The GPS coordinates of the drop point.
  */
-auto translate_gps(const GPS& gps, double d, double head, bool rad = true) -> GPS;
+GPS translate_gps(const GPS &gps, double d, double head, bool rad = true);
 
 /**
  * Calculates the GPS coordinates of a drop point given the final state of the
@@ -38,7 +39,7 @@ auto translate_gps(const GPS& gps, double d, double head, bool rad = true) -> GP
  * @return The GPS coordinates of the drop point.
  */
 template <size_t N>
-auto get_drop(const State<N> S_end, const GPS& gps_target) -> GPS;
+GPS get_drop(const State<N> S_end, const GPS &gps_target);
 
 /**
  * Returns a vector of GPS coordinates that are d meters away from the given
@@ -50,4 +51,4 @@ auto get_drop(const State<N> S_end, const GPS& gps_target) -> GPS;
  * @return A vector of GPS coordinates that are d meters away from the starting
  * point in the specified heading direction.
  */
-std::vector<GPS> way_array(const GPS& drop, double heading, double d);
+std::vector<GPS> way_array(const GPS &drop, double heading, double d);
