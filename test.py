@@ -1,125 +1,89 @@
-#!/usr/bin/python3
+import AirDrop as ad
 
-from libsft_fall_model import dropPoints, trajectories
-import numpy as np
-from scipy.optimize import minimize
-import pandas as pd
-import matplotlib.pyplot as plt
-from math import atan2, degrees, radians, cos, sin
+    """
+    
+    int cxx_trajectories(int size, double* wind, double* vel, double* target, double* h,
+            double* m, double CdS, double time, double step,
+            const char* integrator, double** result, int* lengths) {
+    std::string integrator_i = integrator;
+    Simulation s(step, time, integrator_i);
 
-# read file with all data
-file_name = "test2.csv"
-empirical_data = pd.read_csv(file_name, sep='\s+')
+    for (int i = 0; i < size; i++) {
+        double wind_head = wind[2 * i + 0];
+        double wind_speed = wind[2 * i + 1];
 
-R_E = 6378100
-def micro_diff(origin, target):
-    dLat = radians(target[0] - origin[0])
-    dLong = radians(target[1] - origin[1])
-    N = dLat * R_E
-    E = dLong * R_E * cos(radians(origin[0]))
-    return np.array([N,E])
+        double vel_head = vel[3 * i + 0];
+        double vel_speed = vel[3 * i + 1];
+        double vel_down = vel[3 * i + 2];
 
-def micro_sum(origin, vector):
-    dLat = degrees(vector[0]/R_E)
-    dLong = degrees(vector[1]/(R_E*cos(radians(origin[0]))))
-    return np.array([origin[0]+dLat, origin[1]+dLong])
+        double target_lat = target[2 * i + 0];
+        double target_lon = target[2 * i + 1];
 
-""" optimize CdS"""
-def cost(CdS, data):
-    # convert data in list
-    altitude = data['H'].tolist()
-    mass = data['mass'].tolist()
-    target = list(zip(data['Lat_land'], data['Long_land']))
-    vel = list(zip(data['Head'], data['Vel'], data['V_down']))
-    wind = data['wind'].tolist()
-    res = dropPoints(wind, vel, target, altitude, mass, CdS, 10, 2, 'rk4')
-    # compute loss
-    sum = 0
-    for launch in range(len(res)):
-        theoretical_launch_point = res[launch]
-        empirical_launch_point = (data['Lat_drop'][launch], data['Long_drop'][launch])
-        distance = micro_diff(theoretical_launch_point, empirical_launch_point)
-        sum += np.linalg.norm(distance)**2
-    loss = (sum/len(res))**0.5
-    return loss
-CdS_initial_guess = 0.85*0.4*0.4
-CdS_bounds = (0, None)
-result = minimize(cost, CdS_initial_guess, args=(empirical_data,), method='Nelder-Mead', bounds=[CdS_bounds])
+        double h_i = h[i];
 
-CdS_optimized = result.x[0]
-loss_optimized = result.fun
+        double mass_i = m[i];
 
-print(f"CdS ottimizzato: {CdS_optimized}")
-print(f"Perdita minima: {loss_optimized}")
+        GPS gps_target = {target_lat, target_lon};
 
-def get_trajectories(CdS, data):
-    # convert data in list
-    altitude = data['H'].tolist()
-    mass = data['mass'].tolist()
-    target = list(zip(data['Lat_land'], data['Long_land']))
-    vel = list(zip(data['Head'], data['Vel'], data['V_down']))
-    wind = data['wind'].tolist()
-    return trajectories(wind, vel, target, altitude, mass, CdS, 10, 2, 'rk4')
+        // Wind law
+        std::function<VReal3(const State<3>&, const VReal<3>&, double)>
+            wind_law = [wind_head, wind_speed](const State<3>& state,
+                                               const VReal<3>& pos, double t) {
+                return VReal<3>{wind_speed * cos(wind_head),
+                                wind_speed * sin(wind_head), 0};
+            };
+        // CdS
+        std::function<double(const State<3>&, double)> cds_payload =
+            [CdS](const State<3>& s, double t) {
+                if (t <= 1) {
+                    return CdS * (1- cos(3 * t));
+                } else {
+                    return CdS;
+                }
+            };
 
-solutions = get_trajectories(CdS_optimized, empirical_data)
+        // Create the paychute and wind
+        PayChute<3> pc(cds_payload, mass_i);
+        Wind<3> Vw(wind_law);
 
-# computo i vettori differenza tra punto di lancio e punto di atterraggio empirici
-LatDrop = empirical_data['Lat_drop'].tolist()
-LongDrop = empirical_data['Long_drop'].tolist()
-dropPoints = list(zip(LatDrop, LongDrop))
-LatLand = empirical_data['Lat_land'].tolist()
-LongLand = empirical_data['Long_land'].tolist()
-landPoints = list(zip(LatLand, LongLand))
+        // Create the ballistic model
+        BallisticModel bm(pc, Vw);
+        // Create simulation object
 
-NEDPoints = []
+        State<3> S0 = {0,
+                       0,
+                       -h_i,
+                       vel_speed * cos(vel_head),
+                       vel_speed * sin(vel_head),
+                       vel_down};
 
-for i in range(len(solutions)):
-    distance = micro_diff(dropPoints[i], landPoints[i])
-    NEDPoints += [[distance[0],distance[1],0]]
+        // Run the simulation
+        Results<3> res = s.run(bm, S0);
 
-fig = plt.figure()
-ax = fig.add_subplot(111, projection='3d')
-ax.set_xlim([-40, 40])
-ax.set_ylim([-40, 40])
-ax.set_zlim([-10, 70])
+        // Alloc memory
+        lengths[i] = res[0].size();
+        result[i] = (double*)malloc(lengths[i] * 7 * sizeof(double));
+        if (!result[i]) return 1;
 
-for trajectory in solutions:
-    N = [coord[0] for coord in trajectory]
-    E = [coord[1] for coord in trajectory]
-    D = [coord[2] for coord in trajectory]
+        for (int k = 0; k < lengths[i]; ++k) {
+            State<3> S = res[0][k];
+            result[i][7 * k + 0] = S.X()[0];
+            result[i][7 * k + 1] = S.X()[1];
+            result[i][7 * k + 2] = S.X()[2];
+            result[i][7 * k + 3] = S.X_dot()[0];
+            result[i][7 * k + 4] = S.X_dot()[1];
+            result[i][7 * k + 5] = S.X_dot()[2];
+            result[i][7 * k + 6] = S.get_t();
+        }
+    }
 
-    ax.plot(N, E, D)
+    return 0;
+}
 
-land_N = [coord[0] for coord in NEDPoints]
-land_E = [coord[1] for coord in NEDPoints]
-land_D = [coord[2] for coord in NEDPoints]
+    """
 
-ax.scatter(land_N, land_E, land_D)
 
-plt.show()
 
-# calcolo l'errore relativo nel punto di landing
-relative_error = []
-for i in range(len(solutions)):
-    theoretical_land = solutions[i][-1][:2]
-    empirical_land = NEDPoints[i][:2]
-    relative_error.append(np.array(list(theoretical_land))-np.array(list(empirical_land)))
+sim = ad.Simulation()
 
-error_N = [error[0] for error in relative_error]
-error_E = [error[1] for error in relative_error]
-
-fig, ax = plt.subplots()  # Crea una nuova figura e un set di assi
-
-ax.set_xlim([-40,40])
-ax.set_ylim([-40,40])
-ax.axhline(0, color='black')  # Disegna l'asse y
-ax.axvline(0, color='black')  # Disegna l'asse x
-ax.scatter(error_N, error_E)  # Disegna i punti di errore sul grafico
-ax.set_xlabel('Errore N')  # Imposta l'etichetta dell'asse x
-ax.set_ylabel('Errore E')  # Imposta l'etichetta dell'asse y
-ax.set_title('Errore relativo nel punto di landing')  # Imposta il titolo del grafico
-plt.show()
-
-# calcolo bias
-bias = np.linalg.norm(np.cumsum(relative_error, axis=1)/len(relative_error))
-print(bias)
+risultato = sim.run(modello, stato_iniziale)

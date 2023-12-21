@@ -10,7 +10,7 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
 else()
     set(CMAKE_CXX_FLAGS "-O3 -std=c++20")
 endif()
-find_package(PythonLibs REQUIRED)
+
 set(SRC_DIR
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
@@ -19,24 +19,18 @@ set(INC_DIR
 )
 
 set(SFT_SOURCES
-
     ${SRC_DIR}/Waypoint.cpp
     ${SRC_DIR}/bridge.cpp
 )
 
-message(${PYTHON_INCLUDE_DIRS})
-
 include_directories(
     ${INC_DIR}
-    ${PYTHON_INCLUDE_DIRS}
 )
 
-link_libraries(
-    ${PYTHON_LIBRARIES}
-)
+add_subdirectory(pybind11)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR})
 
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+pybind11_add_module(AirDrop ${SFT_SOURCES})
 
-add_library(${PROJECT_NAME} SHARED
-    ${SFT_SOURCES}
-)
+
+target_link_libraries(AirDrop PRIVATE pybind11::module)
